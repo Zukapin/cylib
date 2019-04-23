@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cylib", "cylib\cylib.csproj", "{EA4A015E-D3A6-4AE8-AC23-367105601D05}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SDL2-CS.Core", "..\SDL2-CS\SDL2-CS.Core.csproj", "{A0FFEAE7-5D3E-4D39-A335-4B6945203891}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DebugWindows|Any CPU = DebugWindows|Any CPU
+		ReleaseWindows|Any CPU = ReleaseWindows|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.DebugWindows|Any CPU.ActiveCfg = ReleaseWindows|Any CPU
+		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.DebugWindows|Any CPU.Build.0 = ReleaseWindows|Any CPU
+		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.ReleaseWindows|Any CPU.ActiveCfg = ReleaseWindows|Any CPU
+		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.ReleaseWindows|Any CPU.Build.0 = ReleaseWindows|Any CPU
+		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.DebugWindows|Any CPU.ActiveCfg = DebugWindows|Any CPU
+		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.DebugWindows|Any CPU.Build.0 = DebugWindows|Any CPU
+		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.ReleaseWindows|Any CPU.ActiveCfg = ReleaseWindows|Any CPU
+		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.ReleaseWindows|Any CPU.Build.0 = ReleaseWindows|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CCD3B159-1815-44FC-8F45-142393417C85}
+	EndGlobalSection
+EndGlobal
