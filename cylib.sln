@@ -7,20 +7,36 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cylib", "cylib\cylib.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SDL2-CS.Core", "..\SDL2-CS\SDL2-CS.Core.csproj", "{A0FFEAE7-5D3E-4D39-A335-4B6945203891}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cyasset", "cyasset\cyasset.csproj", "{22F35CCD-779B-4E3A-9E2E-753A72B18689}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		DebugWindows|Any CPU = DebugWindows|Any CPU
+		Release|Any CPU = Release|Any CPU
 		ReleaseWindows|Any CPU = ReleaseWindows|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.DebugWindows|Any CPU.ActiveCfg = Release|x64
 		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.DebugWindows|Any CPU.Build.0 = Release|x64
+		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.Release|Any CPU.ActiveCfg = Release|x64
 		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.ReleaseWindows|Any CPU.ActiveCfg = Release|x64
 		{EA4A015E-D3A6-4AE8-AC23-367105601D05}.ReleaseWindows|Any CPU.Build.0 = Release|x64
+		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.DebugWindows|Any CPU.ActiveCfg = Release|x64
 		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.DebugWindows|Any CPU.Build.0 = Release|x64
+		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.Release|Any CPU.ActiveCfg = Release|x64
 		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.ReleaseWindows|Any CPU.ActiveCfg = Release|x64
 		{A0FFEAE7-5D3E-4D39-A335-4B6945203891}.ReleaseWindows|Any CPU.Build.0 = Release|x64
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.DebugWindows|Any CPU.ActiveCfg = Debug|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.DebugWindows|Any CPU.Build.0 = Debug|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.ReleaseWindows|Any CPU.ActiveCfg = Release|Any CPU
+		{22F35CCD-779B-4E3A-9E2E-753A72B18689}.ReleaseWindows|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

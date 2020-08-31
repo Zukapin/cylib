@@ -21,7 +21,7 @@ namespace cylib
     /// Anything that interfaces with human input should have a priority.
     /// Any input is given through the list of interfaces, in order of priority, until the input has been handled.
     /// </summary>
-    public enum InterfacePriority
+    public enum InterfacePriority : int
     {
         HIGHEST = 0,
         HIGH = 1024,

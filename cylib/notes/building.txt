@@ -1,0 +1,57 @@
+﻿Build details
+
+goals:
+cylib is built into a library -- doesn't technically *need* anything else
+uses the build tool with something like
+
+  <ItemGroup>
+    <CyContent Include="Content\**" />
+  </ItemGroup>
+
+  <Target Name="ContentBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet run --project $(ProjectDir)..\TestBuilder --input=@(CyContent) --output=$(OutputPath)CyBlob.blob" />
+  </Target>
+
+projects using the lib can use the same thing to add additional content -- lib will scan current directory for any cyblob files on load?
+how to handle content files with possible options? shaders debugs, font sizing, etc? text file in same folder with .opt added, if non-default opts are requested?
+
+update dx bindings to https://github.com/orgs/terrafx/packages
+update bepuphus to v2
+
+updating assetmanager -- 
+	shader compiler needs to parse and save vertex elements
+
+Dependencies are split into library and build. Library dependencies are required at runtime on the client computer. Build dependencies are only required for development.
+
+Library Dependencies:
+.NET 5.0
+	- Updated 8/31/2020
+	- From https://github.com/dotnet/core
+	- Using RC1
+	- Requires the latest VS 2019 Preview to work with VS
+
+SDL2 
+	- Updated 8/31/2020
+	- Used as the base window manager and image loader, since .NET Core doesn't have the Windows bindings that .NET Framework used to have
+	- C# bindings from https://github.com/flibitijibibo/SDL2-CS
+		- git cloned into SDL2-CS folder, using the Core.csproj
+		- move used dll's into the base folder, set to copy-if-newer, so they'll be copied into bin of anything with a SDL2 dependency
+	- SDL2 dlls are in the SDL2-Lib directory in the cylib folder
+	- Base SDL2 dlls from https://www.libsdl.org/download-2.0.php
+	- SDL2_image dlls from https://www.libsdl.org/projects/SDL_image/
+		- requires libjpeg, libpng, zlib, sdl2_image -- all with licenses.
+	- non-windows binaries not supported, need a test machine
+
+Build Dependencies:
+SDL2
+	- See Lib Dependencies
+	- Only kinda-sorta needs SDL_image to write out debug images -- could do without
+
+SharpFont
+	- Updated 8/31/2020
+	- using the nuget package https://www.nuget.org/packages/SharpFontStandard/
+	- which is a .NET Core version of https://github.com/Robmaister/SharpFont
+	- which is C# bindings for FreeType
+	- depends on old version of freetype (newer versions *do* crash, enjoy) found at https://github.com/Robmaister/SharpFont.Dependencies
+		- DLL in the base build tool directory, set to copy-if-newer
+	- SDL_ttf is *not* a replacement because its hella busted (no kerning information, or really any supporting info, just render to sdlSurface)

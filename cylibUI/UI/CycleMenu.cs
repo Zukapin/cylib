@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Numerics;
 using Color = SharpDX.Color;
+using cylib;
 
 using log;
 
-namespace cylib
+namespace cylibUI
 {
     public delegate void CycleEvent(int selected);
 
@@ -112,7 +113,7 @@ namespace cylib
             rect.borderColor = baseColor;
             rect.mainColor = bgColor;
 
-            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.getAsset(FontAssets.SEGOEUI_SDF_128));
             font.color = fontColor;
             font.anchor = FontAnchor.CENTER_CENTER;
 

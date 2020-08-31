@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Numerics;
+using cylib;
 
 using Color = SharpDX.Color;
 
-namespace cylib
+namespace cylibUI
 {
     /// <summary>
     /// It's a button! With text in the center.
@@ -74,7 +75,7 @@ namespace cylib
             rect.borderColor = baseColor;
             rect.mainColor = bgColor;
 
-            font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.getAsset(FontAssets.SEGOEUI_SDF_128));
             font.color = fontColor;
             font.anchor = FontAnchor.CENTER_CENTER;
             font.text = text;

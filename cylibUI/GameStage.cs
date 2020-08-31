@@ -221,22 +221,22 @@ namespace cylib
             }
 
 
-            quad_postex_unit = renderer.Assets.GetVertexBuffer((int)VertexBufferAssets.QUAD_POS_TEX_UNIT);
+            quad_postex_unit = renderer.Assets.getAsset(VertexBufferAssets.QUAD_POS_TEX_UNIT);
 
-            viewProjBuffer = renderer.Assets.GetBuffer<CameraBuffer>((int)BufferAssets.CAM_VIEWPROJ);
-            viewProjInvBuffer = renderer.Assets.GetBuffer<Matrix>((int)BufferAssets.CAM_INVVIEWPROJ);
-            worldBuffer = renderer.Assets.GetBuffer<Matrix>((int)BufferAssets.WORLD);
+            viewProjBuffer = renderer.Assets.getAsset<CameraBuffer>(BufferAssets.CAM_VIEWPROJ);
+            viewProjInvBuffer = renderer.Assets.getAsset<Matrix>(BufferAssets.CAM_INVVIEWPROJ);
+            worldBuffer = renderer.Assets.getAsset<Matrix>(BufferAssets.WORLD);
             #endregion
             #region Shader Setup
-            s_Compile = renderer.Assets.GetShader((int)ShaderAssets.COMPILE);
-            s_PointLight = renderer.Assets.GetShader((int)ShaderAssets.LIGHT_POINT);
-            s_DirectionalLight = renderer.Assets.GetShader((int)ShaderAssets.LIGHT_DIRECTIONAL);
+            s_Compile = renderer.Assets.getAsset(ShaderAssets.COMPILE);
+            s_PointLight = renderer.Assets.getAsset(ShaderAssets.LIGHT_POINT);
+            s_DirectionalLight = renderer.Assets.getAsset(ShaderAssets.LIGHT_DIRECTIONAL);
 
 #if DEBUG
-            s_ColorDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_COLOR);
-            s_DepthDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_DEPTH);
-            s_NormalDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_NORMAL);
-            s_LightDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_LIGHT);
+            s_ColorDebug = renderer.Assets.getAsset(ShaderAssets.DEBUG_COLOR);
+            s_DepthDebug = renderer.Assets.getAsset(ShaderAssets.DEBUG_DEPTH);
+            s_NormalDebug = renderer.Assets.getAsset(ShaderAssets.DEBUG_NORMAL);
+            s_LightDebug = renderer.Assets.getAsset(ShaderAssets.DEBUG_LIGHT);
 #endif
             #endregion
             #region Misc Stuff
@@ -252,21 +252,21 @@ namespace cylib
             #endregion
         }
 
-        private HashSet<int> GetOurAssets()
+        private HashSet<Asset> getOurAssets()
         {
-            return new HashSet<int>()
+            return new HashSet<Asset>()
             {
-                (int)ShaderAssets.COMPILE,
-                (int)ShaderAssets.LIGHT_POINT,
-                (int)ShaderAssets.LIGHT_DIRECTIONAL,
-                (int)ShaderAssets.DEBUG_COLOR,
-                (int)ShaderAssets.DEBUG_DEPTH,
-                (int)ShaderAssets.DEBUG_NORMAL,
-                (int)ShaderAssets.DEBUG_LIGHT,
-                (int)VertexBufferAssets.QUAD_POS_TEX_UNIT,
-                (int)BufferAssets.WORLD,
-                (int)BufferAssets.CAM_VIEWPROJ,
-                (int)BufferAssets.CAM_INVVIEWPROJ
+                (Asset)ShaderAssets.COMPILE,
+                (Asset)ShaderAssets.LIGHT_POINT,
+                (Asset)ShaderAssets.LIGHT_DIRECTIONAL,
+                (Asset)ShaderAssets.DEBUG_COLOR,
+                (Asset)ShaderAssets.DEBUG_DEPTH,
+                (Asset)ShaderAssets.DEBUG_NORMAL,
+                (Asset)ShaderAssets.DEBUG_LIGHT,
+                (Asset)VertexBufferAssets.QUAD_POS_TEX_UNIT,
+                (Asset)BufferAssets.WORLD,
+                (Asset)BufferAssets.CAM_VIEWPROJ,
+                (Asset)BufferAssets.CAM_INVVIEWPROJ
             };
         }
 
@@ -274,10 +274,10 @@ namespace cylib
         {
             //assets we want during the scene
             //note - any changes here should be reflected equally in the loadthread and endload method
-            HashSet<int> assets = GetOurAssets();
+            HashSet<Asset> assets = getOurAssets();
 
             //assets we want during load
-            HashSet<int> loadAssets = new HashSet<int>(assets);
+            HashSet<Asset> loadAssets = new HashSet<Asset>(assets);
 
             if (scene == null)
             {//if this is the first load without a scene, just do this single-threaded
@@ -288,14 +288,14 @@ namespace cylib
             }
 
             //construct asset list
-            loadAssets.UnionWith(scene.GetPreloadAssetList());
-            assets.UnionWith(scene.GetAssetList());
+            loadAssets.UnionWith(scene.getPreloadAssetList());
+            assets.UnionWith(scene.getAssetList());
 
             //preload scene
             activeManager = loadManager;
             input.events = loadManager;
             renderer.Assets.PreLoad(loadAssets);
-            cam = scene.GetCamera();
+            cam = scene.getCamera();
             scene.Preload(loadManager);
 
             //now start the actual loading thread
@@ -306,10 +306,10 @@ namespace cylib
 
         private void LoadThread()
         {
-            HashSet<int> assets = GetOurAssets();
-            HashSet<int> loadAssets = new HashSet<int>(assets);
-            loadAssets.UnionWith(currentScene.GetPreloadAssetList());
-            assets.UnionWith(currentScene.GetAssetList());
+            HashSet<Asset> assets = getOurAssets();
+            HashSet<Asset> loadAssets = new HashSet<Asset>(assets);
+            loadAssets.UnionWith(currentScene.getPreloadAssetList());
+            assets.UnionWith(currentScene.getAssetList());
 
             renderer.Assets.StartLoad(assets, loadAssets);
             currentScene.Load(sceneManager);
@@ -317,10 +317,10 @@ namespace cylib
 
         private void FinishLoad()
         {
-            HashSet<int> assets = GetOurAssets();
-            HashSet<int> loadAssets = new HashSet<int>(assets);
-            loadAssets.UnionWith(currentScene.GetPreloadAssetList());
-            assets.UnionWith(currentScene.GetAssetList());
+            HashSet<Asset> assets = getOurAssets();
+            HashSet<Asset> loadAssets = new HashSet<Asset>(assets);
+            loadAssets.UnionWith(currentScene.getPreloadAssetList());
+            assets.UnionWith(currentScene.getAssetList());
 
             //cleanup all of the load stuff now
             renderer.Assets.EndLoad(assets, loadAssets);
@@ -372,7 +372,7 @@ namespace cylib
                     {
                         currentScene.LoadUpdate(timeStep);
                         loadingTime += timeStep;
-                        if (!loadingThread.IsAlive && loadingTime > currentScene.LoadTime())
+                        if (!loadingThread.IsAlive && loadingTime > currentScene.loadTime())
                         {
                             FinishLoad();
                         }
@@ -424,7 +424,7 @@ namespace cylib
             viewProjBuffer.Write(renderer.Context);
             renderer.Context.VertexShader.SetConstantBuffer(0, viewProjBuffer.buf);
 
-            if (currentScene.Draw3D())
+            if (currentScene.draw3D())
             {
                 viewProjInvBuffer.dat[0] = cam.getInvViewProjMatrix();
                 viewProjInvBuffer.Write(renderer.Context);
@@ -484,7 +484,7 @@ namespace cylib
             //Draw 2D here
             draw2D();
 #if DEBUG
-            if (drawDebug && currentScene.Draw3D())
+            if (drawDebug && currentScene.draw3D())
                 drawMRTOutput();
 #endif
 

@@ -89,7 +89,7 @@ namespace cylib
             this.em = em;
 
             myDat = new PointLightBuffer(pos, color, radius, intensity);
-            buf = renderer.Assets.getAsset<PointLightBuffer>(BufferAssets.POINT_LIGHT);
+            buf = renderer.Assets.GetBuffer<PointLightBuffer>(BufferAssets.POINT_LIGHT);
 
             em.addLight(this);
         }

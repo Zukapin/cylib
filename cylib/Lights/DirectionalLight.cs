@@ -79,7 +79,7 @@ namespace cylib
             this.em = em;
 
             myDat = new DirectionalLightBuffer(dir, color, intensity);
-            buf = renderer.Assets.getAsset<DirectionalLightBuffer>(BufferAssets.DIRECTIONAL_LIGHT);
+            buf = renderer.Assets.GetBuffer<DirectionalLightBuffer>(BufferAssets.DIRECTIONAL_LIGHT);
 
             em.addLight(this);
         }

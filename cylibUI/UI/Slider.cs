@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Numerics;
+using cylib;
 
 using Color = SharpDX.Color;
 
-namespace cylib
+namespace cylibUI
 {
     public delegate void SliderEvent(float value);
 
@@ -143,7 +144,7 @@ namespace cylib
             point.borderColor = baseColor;
             point.mainColor = bgColor;
 
-            font = new FontRenderer(renderer, em, priority, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority, renderer.Assets.getAsset(FontAssets.SEGOEUI_SDF_128));
             font.color = fontColor;
             font.anchor = FontAnchor.CENTER_LEFT;
 

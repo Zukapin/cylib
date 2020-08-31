@@ -111,11 +111,11 @@ namespace cylib
             this.font = font;
 
             if (font.isSDF)
-                shader = renderer.Assets.GetShader(ShaderAssets.FONT_SDF);
+                shader = renderer.Assets.getAsset(ShaderAssets.FONT_SDF);
             else
-                shader = renderer.Assets.GetShader(ShaderAssets.FONT_BITMAP);
-            glyphBuf = renderer.Assets.GetBuffer<FontGlyphBuffer>(BufferAssets.FONT);
-            colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(BufferAssets.COLOR);
+                shader = renderer.Assets.getAsset(ShaderAssets.FONT_BITMAP);
+            glyphBuf = renderer.Assets.getAsset<FontGlyphBuffer>(BufferAssets.FONT);
+            colorBuf = renderer.Assets.getAsset<ColorBuffer>(BufferAssets.COLOR);
             sampler = renderer.samplerLinear;
 
             pos = new Vector2();

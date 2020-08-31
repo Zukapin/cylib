@@ -2,8 +2,9 @@
 using System.Numerics;
 using Keys = SDL2.SDL.SDL_Keycode;
 using Color = SharpDX.Color;
+using cylib;
 
-namespace cylib
+namespace cylibUI
 {
     /// <summary>
     /// Used in textbox class to map from a keycode to a set of render-supported characters.
@@ -286,7 +287,7 @@ namespace cylib
             bg.borderColor = outlineColor;
             bg.borderThickness = 1f;
 
-            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.getAsset(FontAssets.SEGOEUI_SDF_128));
             font.anchor = FontAnchor.CENTER_LEFT;
             font.color = fontColor;
 

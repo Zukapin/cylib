@@ -14,7 +14,7 @@ namespace cylib
         /// Called once around Load time.
         /// Scene must use the camera returned by this method for the entirety of the scene.
         /// </summary>
-        ICamera getCamera();
+        ICamera GetCamera();
 
         /// <summary>
         /// Should return the list of assets this scene is expecting to load.
@@ -24,18 +24,18 @@ namespace cylib
         /// Generally better to include everything possible in this list, because the AssetManager will
         /// dispose of potentially unused assets before the load begins.
         /// </summary>
-        HashSet<Asset> getAssetList();
+        HashSet<int> GetAssetList();
 
         /// <summary>
         /// Should return the list of assets this scene wants during load time.
         /// </summary>
-        HashSet<Asset> getPreloadAssetList();
+        HashSet<int> GetPreloadAssetList();
 
         /// <summary>
         /// Minimum time in seconds to spend on loading. (Useful for splash screens)
         /// </summary>
         /// <returns></returns>
-        float loadTime();
+        float LoadTime();
 
         /// <summary>
         /// Initialize preload assets here.
@@ -66,7 +66,7 @@ namespace cylib
         /// Is checked every frame.
         /// </summary>
         /// <returns></returns>
-        bool draw3D();
+        bool Draw3D();
 
         void Dispose();
     }

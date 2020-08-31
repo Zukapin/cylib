@@ -10,387 +10,89 @@ using System.Numerics;
 using log;
 
 using BepuUtilities;
+using System.Reflection.Metadata.Ecma335;
 
 namespace cylib
 {
-    /// <summary>
-    /// Asset enums used internally by the AssetManager.
-    /// Typed assets can be accessed elsewhere using the typed enums.
-    /// 
-    /// Assets are generally /shared/ resources, this entire bit is here only to save multiple loads / copies in memory.
-    /// Some places will create assets individually because they're not made to be shared.
-    /// </summary>
-    public enum Asset
-    {
-        SH_START = 0,
-        SH_POS_NORM_MAP_TEX,
-        SH_POS_NORM_TEX,
-        SH_POS_NORM_SCOLOR,
-        SH_POS_TEX,
-        SH_DISPLACEMENT_MAP,
-        SH_LIGHT_POINT,
-        SH_LIGHT_DIRECTIONAL,
-        SH_COMPILE,
-        SH_DEBUG_COLOR,
-        SH_DEBUG_DEPTH,
-        SH_DEBUG_NORMAL,
-        SH_DEBUG_LIGHT,
-        SH_FONT_BITMAP,
-        SH_FONT_SDF,
-        SH_ROUNDED_RECTANGLE_2D,
-        SH_ROUNDED_RECTANGLE_3D,
-        SH_LINE,
-        SH_LINE_COLORED,
-        SH_GRADIENT_CIRCLE,
-        SH_DASHED_CIRCLE,
-        SH_BORDERED_CIRCLE,
-        SH_TEST,
-        SH_END,
-
-        TEX_START = 4096,
-        TEX_WHITEPIXEL,
-        TEX_DUCK,
-        TEX_TEST,
-        TEX_END,
-
-        VB_START = 8192,
-        VB_QUAD_POS_TEX_UNIT,
-        VB_CIRLCE_POS_TEX_UNIT,
-        VB_CIRLCE_POS_TEX_NORM_UNIT,
-        VB_BOX_POS_NORM_UNIT,
-        VB_CYLINDER_POS_NORM_UNIT,
-        VB_END,
-
-        F_START = 12288,
-        F_CALLI_SDF_128,
-        F_CALLI_SDF_64,
-        F_CALLI_SDF_32,
-        F_CALLI_SDF_16,
-        F_CALLI_BMP_128,
-        F_CALLI_BMP_64,
-        F_CALLI_BMP_32,
-        F_CALLI_BMP_16,
-        F_SEGOEUI_SDF_128,
-        F_SEGOEUI_SDF_64,
-        F_SEGOEUI_SDF_32,
-        F_SEGOEUI_SDF_16,
-        F_SEGOEUI_BMP_128,
-        F_SEGOEUI_BMP_64,
-        F_SEGOEUI_BMP_32,
-        F_SEGOEUI_BMP_16,
-        F_END,
-
-        B_START = 16384,
-        B_WORLD,
-        B_CAM_VIEWPROJ,
-        B_CAM_INVVIEWPROJ,
-        B_FONT,
-        B_COLOR,
-        B_POINT_LIGHT,
-        B_DIRECTIONAL_LIGHT,
-        B_ROUNDED_RECT,
-        B_ROUNDED_RECT_3D,
-        B_LINE_SEGMENT,
-        B_LINE,
-        B_QUAD_INDEX,
-        B_LINE_COLORED_SEGMENT,
-        B_LINE_COLORED,
-        B_GRADIENT_CIRCLE_DATA,
-        B_GRADIENT_CIRCLE,
-        B_DASHED_CIRCLE_DATA,
-        B_DASHED_CIRCLE,
-        B_BORDERED_CIRCLE_DATA,
-        B_BORDERED_CIRCLE,
-        B_ENEMY_DRAW,
-        B_ENEMY_DATA,
-        B_END
-    }
-
-    public enum TextureAssets
-    {
-        WHITEPIXEL = Asset.TEX_WHITEPIXEL,
-        DUCK = Asset.TEX_DUCK,
-        TEST = Asset.TEX_TEST
-    }
-
-    public enum ShaderAssets
-    {
-        POS_NORM_MAP_TEX = Asset.SH_POS_NORM_MAP_TEX,
-        POS_NORM_TEX = Asset.SH_POS_NORM_TEX,
-        POS_NORM_SCOLOR = Asset.SH_POS_NORM_SCOLOR,
-        POS_TEX = Asset.SH_POS_TEX,
-        DISPLACEMENT_MAP = Asset.SH_DISPLACEMENT_MAP,
-        LIGHT_POINT = Asset.SH_LIGHT_POINT,
-        LIGHT_DIRECTIONAL = Asset.SH_LIGHT_DIRECTIONAL,
-        COMPILE = Asset.SH_COMPILE,
-        DEBUG_COLOR = Asset.SH_DEBUG_COLOR,
-        DEBUG_DEPTH = Asset.SH_DEBUG_DEPTH,
-        DEBUG_NORMAL = Asset.SH_DEBUG_NORMAL,
-        DEBUG_LIGHT = Asset.SH_DEBUG_LIGHT,
-        FONT_BITMAP = Asset.SH_FONT_BITMAP,
-        FONT_SDF = Asset.SH_FONT_SDF,
-        ROUNDED_RECTANGLE_2D = Asset.SH_ROUNDED_RECTANGLE_2D,
-        ROUNDED_RECTANGLE_3D = Asset.SH_ROUNDED_RECTANGLE_3D,
-        LINE = Asset.SH_LINE,
-        LINE_COLORED = Asset.SH_LINE_COLORED,
-        GRADIENT_CIRCLE = Asset.SH_GRADIENT_CIRCLE,
-        DASHED_CIRCLE = Asset.SH_DASHED_CIRCLE,
-        BORDERED_CIRCLE = Asset.SH_BORDERED_CIRCLE,
-        TEST = Asset.SH_TEST,
-    }
-
-    public enum VertexBufferAssets
-    {
-        QUAD_POS_TEX_UNIT = Asset.VB_QUAD_POS_TEX_UNIT,
-        CIRCLE_POS_TEX_UNIT = Asset.VB_CIRLCE_POS_TEX_UNIT,
-        CIRCLE_POS_TEX_NORM_UNIT = Asset.VB_CIRLCE_POS_TEX_NORM_UNIT,
-        BOX_POS_NORM_UNIT = Asset.VB_BOX_POS_NORM_UNIT,
-        CYLINDER_POS_NORM_UNIT = Asset.VB_CYLINDER_POS_NORM_UNIT
-    }
-
-    public enum FontAssets
-    {
-        CALLI_SDF_128 = Asset.F_CALLI_SDF_128,
-        CALLI_SDF_64 = Asset.F_CALLI_SDF_64,
-        CALLI_SDF_32 = Asset.F_CALLI_SDF_32,
-        CALLI_SDF_16 = Asset.F_CALLI_SDF_16,
-        CALLI_BMP_128 = Asset.F_CALLI_BMP_128,
-        CALLI_BMP_64 = Asset.F_CALLI_BMP_64,
-        CALLI_BMP_32 = Asset.F_CALLI_BMP_32,
-        CALLI_BMP_16 = Asset.F_CALLI_BMP_16,
-        SEGOEUI_SDF_128 = Asset.F_SEGOEUI_SDF_128,
-        SEGOEUI_SDF_64 = Asset.F_SEGOEUI_SDF_64,
-        SEGOEUI_SDF_32 = Asset.F_SEGOEUI_SDF_32,
-        SEGOEUI_SDF_16 = Asset.F_SEGOEUI_SDF_16,
-        SEGOEUI_BMP_128 = Asset.F_SEGOEUI_BMP_128,
-        SEGOEUI_BMP_64 = Asset.F_SEGOEUI_BMP_64,
-        SEGOEUI_BMP_32 = Asset.F_SEGOEUI_BMP_32,
-        SEGOEUI_BMP_16 = Asset.F_SEGOEUI_BMP_16,
-    }
-
-    public enum BufferAssets
-    {
-        WORLD = Asset.B_WORLD,
-        CAM_VIEWPROJ = Asset.B_CAM_VIEWPROJ,
-        CAM_INVVIEWPROJ = Asset.B_CAM_INVVIEWPROJ,
-        FONT = Asset.B_FONT,
-        COLOR = Asset.B_COLOR,
-        POINT_LIGHT = Asset.B_POINT_LIGHT,
-        DIRECTIONAL_LIGHT = Asset.B_DIRECTIONAL_LIGHT,
-        ROUNDED_RECT = Asset.B_ROUNDED_RECT,
-        ROUNDED_RECT_3D = Asset.B_ROUNDED_RECT_3D,
-        LINE_SEGMENT = Asset.B_LINE_SEGMENT,
-        LINE = Asset.B_LINE,
-        QUAD_INDEX = Asset.B_QUAD_INDEX,
-        LINE_COLORED_SEGMENT = Asset.B_LINE_COLORED_SEGMENT,
-        LINE_COLORED = Asset.B_LINE_COLORED,
-        GRADIENT_CIRCLE_DATA = Asset.B_GRADIENT_CIRCLE_DATA,
-        GRADIENT_CIRCLE = Asset.B_GRADIENT_CIRCLE,
-        DASHED_CIRCLE_DATA = Asset.B_DASHED_CIRCLE_DATA,
-        DASHED_CIRCLE = Asset.B_DASHED_CIRCLE,
-        BORDERED_CIRCLE_DATA = Asset.B_BORDERED_CIRCLE_DATA,
-        BORDERED_CIRCLE = Asset.B_BORDERED_CIRCLE,
-    }
-
-    public abstract class AssetHelper
-    {
-        public static string getPath(Asset asset)
-        {
-            switch (asset)
-            {
-                case Asset.SH_COMPILE:
-                    return "Content/Effects/Compile.fx";
-                case Asset.SH_DEBUG_COLOR:
-                    return "Content/Effects/ColorDebug.fx";
-                case Asset.SH_DEBUG_DEPTH:
-                    return "Content/Effects/DepthDebug.fx";
-                case Asset.SH_DEBUG_LIGHT:
-                    return "Content/Effects/LightDebug.fx";
-                case Asset.SH_DEBUG_NORMAL:
-                    return "Content/Effects/NormalDebug.fx";
-                case Asset.SH_DISPLACEMENT_MAP:
-                    return "Content/Effects/DisplacementMap.fx";
-                case Asset.SH_LIGHT_POINT:
-                    return "Content/Effects/PointLight.fx";
-                case Asset.SH_LIGHT_DIRECTIONAL:
-                    return "Content/Effects/DirectionalLight.fx";
-                case Asset.SH_POS_NORM_MAP_TEX:
-                    return "Content/Effects/PosNormMapTex.fx";
-                case Asset.SH_POS_NORM_TEX:
-                    return "Content/Effects/PosNormTex.fx";
-                case Asset.SH_POS_NORM_SCOLOR:
-                    return "Content/Effects/PosNormSColor.fx";
-                case Asset.SH_POS_TEX:
-                    return "Content/Effects/PosTex.fx";
-                case Asset.SH_FONT_BITMAP:
-                    return "Content/Effects/FontBitmap.fx";
-                case Asset.SH_FONT_SDF:
-                    return "Content/Effects/FontSDF.fx";
-                case Asset.SH_ROUNDED_RECTANGLE_2D:
-                    return "Content/Effects/RoundedRectangle2D.fx";
-                case Asset.SH_ROUNDED_RECTANGLE_3D:
-                    return "Content/Effects/RoundedRectangle.fx";
-                case Asset.SH_LINE:
-                    return "Content/Effects/Line.fx";
-                case Asset.SH_LINE_COLORED:
-                    return "Content/Effects/LineColored.fx";
-                case Asset.SH_GRADIENT_CIRCLE:
-                    return "Content/Effects/GradientCircle.fx";
-                case Asset.SH_DASHED_CIRCLE:
-                    return "Content/Effects/DashedCircle.fx";
-                case Asset.SH_BORDERED_CIRCLE:
-                    return "Content/Effects/BorderedCircle.fx";
-                case Asset.SH_TEST:
-                    return "Content/Effects/TestEffect.fx";
-                case Asset.TEX_WHITEPIXEL:
-                    return "Content/Textures/WhitePixel.bmp";
-                case Asset.TEX_DUCK:
-                    return "Content/Textures/angelduck.png";
-                case Asset.TEX_TEST:
-                    return "Content/Textures/test.png";
-                case Asset.F_CALLI_SDF_128:
-                    return "Content/Fonts/callisdf128.cyf";
-                case Asset.F_CALLI_SDF_64:
-                    return "Content/Fonts/callisdf64.cyf";
-                case Asset.F_CALLI_SDF_32:
-                    return "Content/Fonts/callisdf32.cyf";
-                case Asset.F_CALLI_SDF_16:
-                    return "Content/Fonts/callisdf16.cyf";
-                case Asset.F_CALLI_BMP_128:
-                    return "Content/Fonts/callibmp128.cyf";
-                case Asset.F_CALLI_BMP_64:
-                    return "Content/Fonts/callibmp64.cyf";
-                case Asset.F_CALLI_BMP_32:
-                    return "Content/Fonts/callibmp32.cyf";
-                case Asset.F_CALLI_BMP_16:
-                    return "Content/Fonts/callibmp16.cyf";
-                case Asset.F_SEGOEUI_SDF_128:
-                    return "Content/Fonts/segoeuisdf128.cyf";
-                case Asset.F_SEGOEUI_SDF_64:
-                    return "Content/Fonts/segoeuisdf64.cyf";
-                case Asset.F_SEGOEUI_SDF_32:
-                    return "Content/Fonts/segoeuisdf32.cyf";
-                case Asset.F_SEGOEUI_SDF_16:
-                    return "Content/Fonts/segoeuisdf16.cyf";
-                case Asset.F_SEGOEUI_BMP_128:
-                    return "Content/Fonts/segoeuibmp128.cyf";
-                case Asset.F_SEGOEUI_BMP_64:
-                    return "Content/Fonts/segoeuibmp64.cyf";
-                case Asset.F_SEGOEUI_BMP_32:
-                    return "Content/Fonts/segoeuibmp32.cyf";
-                case Asset.F_SEGOEUI_BMP_16:
-                    return "Content/Fonts/segoeuibmp16.cyf";
-                default:
-                    throw new Exception("Missing asset path case! " + asset);
-            }
-        }
-
-        public static InputElement[] getVertexElements(ShaderAssets shader)
-        {
-            switch (shader)
-            {
-                case ShaderAssets.COMPILE:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.DEBUG_COLOR:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.DEBUG_DEPTH:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.DEBUG_LIGHT:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.DEBUG_NORMAL:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.DISPLACEMENT_MAP:
-                    return VertexPositionNormalMapTexture.vertexElements;
-                case ShaderAssets.LIGHT_POINT:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.LIGHT_DIRECTIONAL:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.POS_NORM_MAP_TEX:
-                    return VertexPositionNormalMapTexture.vertexElements;
-                case ShaderAssets.POS_NORM_TEX:
-                    return VertexPositionNormalTexture.vertexElements;
-                case ShaderAssets.POS_NORM_SCOLOR:
-                    return VertexPositionNormal.vertexElements;
-                case ShaderAssets.POS_TEX:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.FONT_BITMAP:
-                    return null;
-                case ShaderAssets.FONT_SDF:
-                    return null;
-                case ShaderAssets.LINE:
-                    return null;
-                case ShaderAssets.LINE_COLORED:
-                    return null;
-                case ShaderAssets.GRADIENT_CIRCLE:
-                    return null;
-                case ShaderAssets.DASHED_CIRCLE:
-                    return null;
-                case ShaderAssets.BORDERED_CIRCLE:
-                    return null;
-                case ShaderAssets.ROUNDED_RECTANGLE_3D:
-                    return null;
-                case ShaderAssets.ROUNDED_RECTANGLE_2D:
-                    return VertexPositionTexture.vertexElements;
-                case ShaderAssets.TEST:
-                    return VertexPositionTexture.vertexElements;
-                default:
-                    throw new Exception("Missing shader vert ele case! " + shader);
-            }
-        }
-    }
+    public delegate VertexBuffer VBLoader(Renderer renderer);
+    public delegate IDisposable AssetLoader(Renderer renderer);
 
     public class AssetManager
     {
+        public enum AssetTypes
+        {
+            ERR = -1,
+            SHADER = 0,
+            TEXTURE = 1,
+            VERTEX_BUFFER = 2,
+            FONT = 3,
+            BUFFER = 4,
+            CUSTOM = 5,
+        }
+
         #region AssetBlob Reader
+        struct AssetDat
+        {
+            public long offset;
+            public long len;
+
+            public AssetDat(long offset, long len)
+            {
+                this.offset = offset;
+                this.len = len;
+            }
+        }
+
         /// <summary>
         /// A class for reading from one of our asset blob files.
         /// Keeps a file handle open until disposed.
         /// </summary>
         class AssetBlob : IDisposable
         {
-            struct AssetDat
+            public static List<(string name, AssetTypes type, long offset, long len)> ParseHeader(string file, out long HeaderOffset)
             {
-                public long offset;
-                public long len;
+                var toRet = new List<(string name, AssetTypes type, long offset, long len)>();
 
-                public AssetDat(long offset, long len)
-                {
-                    this.offset = offset;
-                    this.len = len;
-                }
-            }
+                using var fs = new FileStream(file, FileMode.Open);
+                using var fr = new BinaryReader(fs, Encoding.Unicode, true);
 
-            readonly string file;
-            Dictionary<Asset, AssetDat> assetToOffset = new Dictionary<Asset, AssetDat>();
-            Stream stream;
-            long headerOffset;
-            LimitStream pubStream;
-
-            public AssetBlob(string file)
-            {
-                this.file = file;
-
-                OpenStream();
-
-                //read the header
-                BinaryReader fr = new BinaryReader(stream, Encoding.Unicode, true);
                 int numAssets = fr.ReadInt32();
 
                 for (int i = 0; i < numAssets; i++)
                 {
-                    Asset a = (Asset)fr.ReadInt32();
+                    string name = fr.ReadString();
+                    AssetTypes t = (AssetTypes)fr.ReadInt32();
                     long offset = fr.ReadInt64();
                     long len = fr.ReadInt64();
 
-                    assetToOffset.Add(a, new AssetDat(offset, len));
+                    toRet.Add((name, t, offset, len));
                 }
 
-                fr.Dispose();
+                HeaderOffset = fs.Position;
 
-                //finish init
-                headerOffset = stream.Position;
+                return toRet;
+            }
 
-                CloseStream();
+            readonly string file;
+            readonly AssetDat[] assetToOffset;
+            Stream stream;
+            LimitStream pubStream;
+            readonly long HeaderOffset;
+
+            public readonly int startID;
+
+            /// <summary>
+            /// non-inclusive -- so if startID is 0 and there's 1 asset, then endID will be 1
+            /// </summary>
+            public readonly int endID;
+
+            public AssetBlob(string file, int startID, AssetDat[] assetToOffset, long HeaderOffset)
+            {
+                this.file = file;
+                this.startID = startID;
+                this.assetToOffset = assetToOffset;
+                endID = startID + assetToOffset.Length;
+                this.HeaderOffset = HeaderOffset;
             }
 
             /// <summary>
@@ -430,45 +132,23 @@ namespace cylib
                 stream = null;
             }
 
-            public Stream GetAssetStream(Asset a)
+            public Stream GetAssetStream(int a)
             {
-                //doing some IfDebug here to allow asset blob to be read at inappropriate times, with an accompanying error saying 'stop it'
-#if DEBUG
-                bool tempStream = false;
-#endif
+                if (a < 0 || a >= assetToOffset.Length)
+                {
+                    Logger.WriteLine(LogType.ERROR, "Getting asset stream for an asset that doesn't exist: " + a);
+                    return null;
+                }
+
                 if (stream == null)
                 {
                     Logger.WriteLine(LogType.ERROR, "Calling getAssetStream while AssetBlob is closed...");
-#if DEBUG
-                    tempStream = true;
-                    OpenStream();
-#else
-                    throw new Exception("Can't read asset...");
-#endif
+                    throw new Exception("Can't read asset, AssetBlob is closed.");
                 }
 
-#if DEBUG
-                try
-                {
-#endif
-                    AssetDat dat;
-                    if (assetToOffset.TryGetValue(a, out dat))
-                    {
-                        pubStream.SetLimits(headerOffset + dat.offset, dat.len);
-                        return pubStream;
-                    }
-
-                    return null;
-#if DEBUG
-                }
-                finally
-                {
-                    if (tempStream)
-                    {
-                        CloseStream();
-                    }
-                }
-#endif
+                var dat = assetToOffset[a];
+                pubStream.SetLimits(HeaderOffset + dat.offset, dat.len);
+                return pubStream;
             }
 
             public void Dispose()
@@ -478,18 +158,97 @@ namespace cylib
         }
         #endregion
 
-        private Dictionary<Asset, IDisposable> loadedAssets = new Dictionary<Asset, IDisposable>();
-        private Renderer renderer;
-        private AssetBlob blob;
+        private readonly Dictionary<string, IDisposable> loadedAssets = new Dictionary<string, IDisposable>();
+        private readonly Renderer renderer;
+
+        private readonly List<AssetBlob> assetBlobs = new List<AssetBlob>();
+        private readonly Dictionary<string, (int, AssetTypes)> assetNameToID = new Dictionary<string, (int, AssetTypes)>();
+
+        private readonly Dictionary<int, VBLoader> vertexLoaders = new Dictionary<int, VBLoader>();
+        private readonly Dictionary<int, AssetLoader> bufferLoaders = new Dictionary<int, AssetLoader>();
+        private readonly Dictionary<int, AssetLoader> customLoaders = new Dictionary<int, AssetLoader>();
 
         private bool inPreload = false;
         private bool inLoad = false;
-        private HashSet<Asset> assetsAddedDuringLoad = new HashSet<Asset>();
+        private readonly HashSet<string> assetsAddedDuringLoad = new HashSet<string>();
 
-        public AssetManager(Renderer renderer, string blob)
+        public AssetManager(Renderer renderer)
         {
             this.renderer = renderer;
-            this.blob = new AssetBlob(blob);
+        }
+
+        public void AddAssetBlob(string blob)
+        {
+            int startID = assetNameToID.Count;
+            var assets = AssetBlob.ParseHeader(blob, out long HeaderOffset);
+            AssetDat[] assetData = new AssetDat[assets.Count];
+            for (int i = 0; i < assetData.Length; i++)
+            {
+                var a = assets[i];
+                assetData[i] = new AssetDat(a.offset, a.len);
+                assetNameToID.Add(a.name, (i + startID, a.type));
+            }
+
+            var b = new AssetBlob(blob, startID, assetData, HeaderOffset);
+            assetBlobs.Add(b);
+        }
+
+        public void AddVertexBuffers(IEnumerable<(string, VBLoader)> loaders)
+        {
+            int i = assetNameToID.Count;
+            foreach (var (name, del) in loaders)
+            {
+                assetNameToID.Add(name, (i, AssetTypes.VERTEX_BUFFER));
+                vertexLoaders.Add(i, del);
+                i++;
+            }
+        }
+
+        public void AddBufferLoaders(IEnumerable<(string, AssetLoader)> loaders)
+        {
+            int i = assetNameToID.Count;
+            foreach (var (name, del) in loaders)
+            {
+                assetNameToID.Add(name, (i, AssetTypes.BUFFER));
+                bufferLoaders.Add(i, del);
+                i++;
+            }
+        }
+
+        public void AddCustomLoaders(IEnumerable<(string, AssetLoader)> loaders)
+        {
+            int i = assetNameToID.Count;
+            foreach (var (name, del) in loaders)
+            {
+                assetNameToID.Add(name, (i, AssetTypes.CUSTOM));
+                customLoaders.Add(i, del);
+                i++;
+            }
+        }
+
+        private (int ID, AssetTypes type) GetAssetInfo(string a)
+        {
+            if (assetNameToID.TryGetValue(a, out var dat))
+            {
+                return dat;
+            }
+
+            Logger.WriteLine(LogType.ERROR, "Can't find asset name in blob: " + a);
+            return (-1, AssetTypes.ERR);
+        }
+
+        private Stream GetAssetStream(int a)
+        {
+            foreach (var b in assetBlobs)
+            {
+                if (a >= b.startID && a < b.endID)
+                {
+                    return b.GetAssetStream(a - b.startID);
+                }
+            }
+
+            Logger.WriteLine(LogType.ERROR, "Can't find asset stream: " + a);
+            return null;
         }
 
         /// <summary>
@@ -497,7 +256,7 @@ namespace cylib
         /// Should be called from main thread.
         /// </summary>
         /// <param name="preloadAssets">Assets needed for use while loading</param>
-        public void PreLoad(HashSet<Asset> preloadAssets)
+        public void PreLoad(HashSet<string> preloadAssets)
         {
             if (inLoad)
                 throw new ArgumentException("Called PreLoad while inLoad is true");
@@ -505,14 +264,18 @@ namespace cylib
                 throw new ArgumentException("Called PreLoad while inPreload is true");
 
             inPreload = true;
-            blob.OpenStream();
+
+            foreach(var b in assetBlobs)
+            {
+                b.OpenStream();
+            }
 
             //we want to load loading screen assets
-            var s_toLoad = new HashSet<Asset>(preloadAssets.Except(loadedAssets.Keys));
+            var s_toLoad = new HashSet<string>(preloadAssets.Except(loadedAssets.Keys));
 
-            foreach (Asset a in s_toLoad)
+            foreach (var a in s_toLoad)
             {
-                loadedAssets.Add(a, loadAsset(a));
+                loadedAssets.Add(a, LoadAsset(a));
             }
         }
 
@@ -520,7 +283,7 @@ namespace cylib
         /// Should be called from load thread.
         /// </summary>
         /// <param name="keepAssets"></param>
-        public void StartLoad(HashSet<Asset> keepAssets, HashSet<Asset> preloadAssets)
+        public void StartLoad(HashSet<string> keepAssets, HashSet<string> preloadAssets)
         {
             if (inLoad)
                 throw new ArgumentException("Called StartLoad while inLoad is true");
@@ -531,19 +294,19 @@ namespace cylib
             inLoad = true;
 
             //here we want to load everything requested, and dispose things not needed anymore
-            var s_Keep = new HashSet<Asset>(keepAssets.Union(preloadAssets));
-            var s_toLoad = new HashSet<Asset>(s_Keep.Except(loadedAssets.Keys));
-            var s_toDipose = new HashSet<Asset>(loadedAssets.Keys.Except(s_Keep));
+            var s_Keep = new HashSet<string>(keepAssets.Union(preloadAssets));
+            var s_toLoad = new HashSet<string>(s_Keep.Except(loadedAssets.Keys));
+            var s_toDipose = new HashSet<string>(loadedAssets.Keys.Except(s_Keep));
 
-            foreach (Asset s in s_toDipose)
+            foreach (var s in s_toDipose)
             {
                 loadedAssets[s].Dispose();
                 loadedAssets.Remove(s);
             }
 
-            foreach (Asset a in s_toLoad)
+            foreach (var a in s_toLoad)
             {
-                loadedAssets.Add(a, loadAsset(a));
+                loadedAssets.Add(a, LoadAsset(a));
             }
 
             assetsAddedDuringLoad.Clear();
@@ -555,7 +318,7 @@ namespace cylib
         /// </summary>
         /// <param name="keepAssets">Assets needed in general</param>
         /// <param name="preloadAssets">Assets needed during load</param>
-        public void EndLoad(HashSet<Asset> keepAssets, HashSet<Asset> preloadAssets)
+        public void EndLoad(HashSet<string> keepAssets, HashSet<string> preloadAssets)
         {
             if (!inLoad)
                 throw new ArgumentException("Called EndLoad while inLoad is false");
@@ -566,16 +329,16 @@ namespace cylib
 
             //the assets we needed during load, but not those needed after
             //have to be careful with assets that were dynamically added during load time
-            var s_toDipose = new HashSet<Asset>(preloadAssets.Except(keepAssets.Union(assetsAddedDuringLoad)));
+            var s_toDipose = new HashSet<string>(preloadAssets.Except(keepAssets.Union(assetsAddedDuringLoad)));
 
 #if DEBUG
-            foreach (Asset a in assetsAddedDuringLoad.Except(keepAssets))
+            foreach (var a in assetsAddedDuringLoad.Except(keepAssets))
             {
                 Logger.WriteLine(LogType.DEBUG, "Asset added dynamically during load: " + a);
             }
 #endif
 
-            foreach (Asset s in s_toDipose)
+            foreach (var s in s_toDipose)
             {
                 loadedAssets[s].Dispose();
                 loadedAssets.Remove(s);
@@ -583,34 +346,45 @@ namespace cylib
 
             assetsAddedDuringLoad.Clear();
 
-            blob.CloseStream();
+            foreach (var b in assetBlobs)
+            {
+                b.CloseStream();
+            }
         }
 
-        private IDisposable loadAsset(Asset a)
+        private IDisposable LoadAsset(string name)
         {
 #if DEBUG
             if (!inLoad && !inPreload)
-                Logger.WriteLine(LogType.ERROR, "Loading resource during runtime, add it to load list: " + a);
+                Logger.WriteLine(LogType.ERROR, "Loading resource during runtime, add it to load list: " + name);
 #else
             if (!inLoad && !inPreload)
-                throw new Exception("Loading an asset while not in asset load mode?");
+                throw new Exception("Loading an asset while not in asset load mode? " + name);
 #endif
 
-            if (a > Asset.SH_START && a < Asset.SH_END)
-                return loadShader((ShaderAssets)a);
-            if (a > Asset.TEX_START && a < Asset.TEX_END)
-                return loadTexture((TextureAssets)a);
-            if (a > Asset.VB_START && a < Asset.VB_END)
-                return loadVertexBuffer((VertexBufferAssets)a);
-            if (a > Asset.F_START && a < Asset.F_END)
-                return loadFont((FontAssets)a);
-            if (a > Asset.B_START && a < Asset.B_END)
-                return loadBuffer((BufferAssets)a);
+            var inf = GetAssetInfo(name);
+            var a = inf.ID;
 
-            throw new Exception("Invalid asset type, can't load");
+            switch (inf.type)
+            {
+                case AssetTypes.SHADER:
+                    return LoadShader(a);
+                case AssetTypes.TEXTURE:
+                    return LoadTexture(a);
+                case AssetTypes.VERTEX_BUFFER:
+                    return LoadVertexBuffer(a);
+                case AssetTypes.FONT:
+                    return LoadFont(a);
+                case AssetTypes.BUFFER:
+                    return LoadBuffer(a);
+                case AssetTypes.CUSTOM:
+                    return LoadCustom(a);
+            }
+
+            throw new Exception("Invalid asset type, can't load: " + a + " " + inf.type);
         }
 
-        private IDisposable getAsset(Asset a)
+        private IDisposable GetAsset(string a)
         {
             IDisposable toReturn = null;
 
@@ -625,7 +399,7 @@ namespace cylib
             {
                 //in debug mode, we don't care if we're currently loading -- just load the asset anyways and take the frame hit
                 //this will display an error, because release mode doesn't allow any asset loading outside of load time.
-                toReturn = loadAsset(a);
+                toReturn = LoadAsset(a);
                 loadedAssets.Add(a, toReturn);
                 return toReturn;
             }
@@ -642,95 +416,89 @@ namespace cylib
             throw new Exception("Asset not loaded, attempting to be used: " + a);
         }
 
-        public Shader getAsset(ShaderAssets a)
+        public Shader GetShader(string a)
         {
-            return (Shader)getAsset((Asset)a);
+            return (Shader)GetAsset(a);
         }
 
-        public Texture getAsset(TextureAssets a)
+        public Texture GetTexture(string a)
         {
-            return (Texture)getAsset((Asset)a);
+            return (Texture)GetAsset(a);
         }
 
-        public VertexBuffer getAsset(VertexBufferAssets a)
+        public VertexBuffer GetVertexBuffer(string a)
         {
-            return (VertexBuffer)getAsset((Asset)a);
+            return (VertexBuffer)GetAsset(a);
         }
 
-        public Font getAsset(FontAssets a)
+        public Font GetFont(string a)
         {
-            return (Font)getAsset((Asset)a);
+            return (Font)GetAsset(a);
         }
 
-        public ConstBuffer<T> getAsset<T>(BufferAssets a) where T : struct
+        public ConstBuffer<T> GetBuffer<T>(string a) where T : struct
         {
-            return (ConstBuffer<T>)getAsset((Asset)a);
+            return (ConstBuffer<T>)GetAsset(a);
         }
 
-        private Shader loadShader(ShaderAssets shader)
+        private Shader LoadShader(int shader)
         {
-#if DEBUG
-            return new Shader(renderer, AssetHelper.getPath((Asset)shader), AssetHelper.getVertexElements(shader));
-#else
-            return new Shader(renderer, blob.GetAssetStream((Asset)shader), AssetHelper.getVertexElements(shader));
-#endif
-        }
-
-        private Texture loadTexture(TextureAssets tex)
-        {
-            Stream str = blob.GetAssetStream((Asset)tex);
+            Stream str = GetAssetStream(shader);
             if (str == null)
             {
-#if DEBUG
-                Logger.WriteLine(LogType.DEBUG, "Can't find shader in asset blob, loading from file. " + tex);
-                return new Texture(renderer, AssetHelper.getPath((Asset)tex));
-#else
-                Logger.WriteLine(LogType.ERROR, "Can't find shader in asset blob, loading from file. " + tex);
+                Logger.WriteLine(LogType.ERROR, "Can't find shader in asset blob: " + shader);
+                return null;
+            }
+
+            return new Shader(renderer, str);
+        }
+
+        private Texture LoadTexture(int tex)
+        {
+            Stream str = GetAssetStream(tex);
+            if (str == null)
+            {
+                Logger.WriteLine(LogType.ERROR, "Can't find texture in asset blob: " + tex);
                 return null; //welp, probably just gonna crash here
-#endif
             }
 
             return new Texture(renderer, str);
         }
 
-        private Font loadFont(FontAssets font)
+        private Font LoadFont(int font)
         {
-            Stream str = blob.GetAssetStream((Asset)font);
+            Stream str = GetAssetStream(font);
             if (str == null)
             {
-#if DEBUG
-                Logger.WriteLine(LogType.DEBUG, "Can't find shader in asset blob, loading from file. " + font);
-                return new Font(renderer, AssetHelper.getPath((Asset)font));
-#else
-                Logger.WriteLine(LogType.ERROR, "Can't find shader in asset blob, loading from file. " + font);
+                Logger.WriteLine(LogType.ERROR, "Can't find font in asset blob: " + font);
                 return null; //welp, probably just gonna crash here
-#endif
             }
 
             return new Font(renderer, str);
         }
 
-        private VertexBuffer loadVertexBuffer(VertexBufferAssets vb)
+        private VertexBuffer LoadVertexBuffer(int vb)
         {
-            switch (vb)
+            if (vertexLoaders.TryGetValue(vb, out var loader))
             {
-                case VertexBufferAssets.QUAD_POS_TEX_UNIT:
-                    return VertexBuffer.CreatePosTexQuad(renderer, Vector2.Zero, new Vector2(1, 1));
-                case VertexBufferAssets.CIRCLE_POS_TEX_UNIT:
-                    return VertexBuffer.CreatePosTexCircle(renderer, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36);
-                case VertexBufferAssets.CIRCLE_POS_TEX_NORM_UNIT:
-                    return VertexBuffer.CreatePosTexNormCircle(renderer, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36);
-                case VertexBufferAssets.BOX_POS_NORM_UNIT:
-                    return VertexBuffer.CreatePosNormBox(renderer, Vector3.Zero, new Vector3(1, 1, 1));
-                case VertexBufferAssets.CYLINDER_POS_NORM_UNIT:
-                    return VertexBuffer.CreatePosNormCylinder(renderer, Vector3.Zero, 0.5f, 1f, Vector3.UnitY, 36);
-                default:
-                    throw new Exception("Missing vb case! " + vb);
+                return loader(renderer);
             }
+
+            Logger.WriteLine(LogType.ERROR, "Invalid vertex buffer loading ID: " + vb);
+            return null;
         }
 
-        private IDisposable loadBuffer(BufferAssets buf)
+        private IDisposable LoadBuffer(int buf)
         {
+            if (bufferLoaders.TryGetValue(buf, out var loader))
+            {
+                return loader(renderer);
+            }
+
+            Logger.WriteLine(LogType.ERROR, "Invalid buffer loading ID: " + buf);
+            return null;
+
+            /*
             switch (buf)
             {
                 // This is hellzone until all of the buffers are defined.
@@ -765,7 +533,7 @@ namespace cylib
                         }
                         return new ConstBuffer<ushort>(renderer, ibLen, ResourceUsage.Immutable, BindFlags.IndexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, ib);
                     }
-                /*
+                
                 case BufferAssets.LINE_COLORED:
                     return new ConstBuffer<ColoredLineData>(renderer, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None);
                 case BufferAssets.GRADIENT_CIRCLE_DATA:
@@ -788,10 +556,22 @@ namespace cylib
                     return new ConstBuffer<BorderedCircleData>(renderer, 128, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured);
                 case BufferAssets.ROUNDED_RECT_3D:
                     return new ConstBuffer<RoundedRectangleData>(renderer, 128, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured);
-                */
+                
                 default:
                     throw new Exception("Missing buffer case! " + buf);
             }
+            */
+        }
+
+        private IDisposable LoadCustom(int c)
+        {
+            if (customLoaders.TryGetValue(c, out var loader))
+            {
+                return loader(renderer);
+            }
+
+            Logger.WriteLine(LogType.ERROR, "Invalid custom loading ID: " + c);
+            return null;
         }
     }
 }

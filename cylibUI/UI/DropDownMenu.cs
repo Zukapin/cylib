@@ -2,8 +2,9 @@
 using System.Numerics;
 using log;
 using Color = SharpDX.Color;
+using cylib;
 
-namespace cylib
+namespace cylibUI
 {
     public delegate void DropDownEvent(int selected);
 
@@ -244,14 +245,14 @@ namespace cylib
             mouseHl.radius = borderRadius;
             mouseHl.enabled = false;
 
-            font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.getAsset(FontAssets.SEGOEUI_SDF_128));
             font.anchor = FontAnchor.CENTER_LEFT;
             font.text = labels[Selection];
 
             labelFonts = new FontRenderer[labels.Length];
             for (int i = 0; i < labelFonts.Length; i++)
             {
-                labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.GetFont(FontAssets.DEFAULT));
+                labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.getAsset(FontAssets.SEGOEUI_SDF_128));
                 labelFonts[i].anchor = FontAnchor.CENTER_LEFT;
                 labelFonts[i].text = labels[i];
                 labelFonts[i].enabled = false;

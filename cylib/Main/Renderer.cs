@@ -19,6 +19,9 @@ using Resource = SharpDX.Direct3D11.Resource;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 using Color = SharpDX.Color;
 
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+
 namespace cylib
 {
     public class Renderer
@@ -165,6 +168,26 @@ namespace cylib
             }
         }
 
+        public static class DefaultAssets
+        {
+            public const string VB_QUAD_POS_TEX_UNIT = "VB_QUAD_POS_TEX_UNIT";
+            public const string VB_CIRCLE_POS_TEX_UNIT = "VB_CIRCLE_POS_TEX_UNIT";
+            public const string VB_CIRCLE_POS_TEX_NORM_UNIT = "VB_CIRCLE_POS_TEX_NORM_UNIT";
+            public const string VB_BOX_POS_NORM_UNIT = "VB_BOX_POS_NORM_UNIT";
+            public const string VB_CYLINDER_POS_NORM_UNIT = "VB_CYLINDER_POS_NORM_UNIT";
+
+            public const string BUF_WORLD = "BUF_WORLD";
+            public const string BUF_CAM_VIEWPROJ = "BUF_CAM_VIEWPROJ";
+            public const string BUF_CAM_INVVIEWPROJ = "BUF_CAM_INVVIEWPROJ";
+            public const string BUF_FONT = "BUF_FONT";
+            public const string BUF_POINT_LIGHT = "BUF_POINT_LIGHT";
+            public const string BUF_DIRECTIONAL_LIGHT = "BUF_DIRECTIONAL_LIGHT";
+            public const string BUF_COLOR = "BUF_COLOR";
+            public const string BUF_ROUNDED_RECT = "BUF_ROUNDED_RECT";
+            public const string BUF_QUAD_INDEX = "BUF_QUAD_INDEX";
+        }
+
+
         public Renderer(Window window)
         {
             {
@@ -209,7 +232,42 @@ namespace cylib
                 //Init context
                 context = Device.ImmediateContext;
 
-                assetManager = new AssetManager(this, @"Content\blob.cy");
+                assetManager = new AssetManager(this);
+
+                assetManager.AddVertexBuffers(new List<(string, VBLoader)>()
+                {
+                    (DefaultAssets.VB_QUAD_POS_TEX_UNIT, (Renderer r) => { return VertexBuffer.CreatePosTexQuad(r, Vector2.Zero, new Vector2(1, 1)); }),
+                    (DefaultAssets.VB_CIRCLE_POS_TEX_UNIT, (Renderer r) => { return VertexBuffer.CreatePosTexCircle(r, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36); }),
+                    (DefaultAssets.VB_CIRCLE_POS_TEX_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosTexNormCircle(r, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36); }),
+                    (DefaultAssets.VB_BOX_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormBox(r, Vector3.Zero, new Vector3(1, 1, 1)); }),
+                    (DefaultAssets.VB_CYLINDER_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormCylinder(r, Vector3.Zero, 0.5f, 1f, Vector3.UnitY, 36); }),
+                });
+
+                assetManager.AddBufferLoaders(new List<(string, AssetLoader)>()
+                {
+                    (DefaultAssets.BUF_WORLD, (Renderer r) => { return new ConstBuffer<Matrix>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_CAM_VIEWPROJ, (Renderer r) => { return new ConstBuffer<CameraBuffer>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_CAM_INVVIEWPROJ, (Renderer r) => { return new ConstBuffer<Matrix>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_FONT, (Renderer r) => { return new ConstBuffer<FontGlyphBuffer>(r, 6 * 32, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured); }),
+                    (DefaultAssets.BUF_POINT_LIGHT, (Renderer r) => { return new ConstBuffer<PointLightBuffer>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_DIRECTIONAL_LIGHT, (Renderer r) => { return new ConstBuffer<DirectionalLightBuffer>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_COLOR, (Renderer r) => { return new ConstBuffer<ColorBuffer>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_ROUNDED_RECT, (Renderer r) => { return new ConstBuffer<RoundedRectData>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
+                    (DefaultAssets.BUF_QUAD_INDEX, (Renderer r) => {
+                        int ibLen = 128 * 6;
+                        ushort[] ib = new ushort[ibLen];
+                        for (int i = 0; i < ib.Length / 6; i++)
+                        {
+                            ib[i * 6 + 0] = (ushort)(i * 4 + 0);
+                            ib[i * 6 + 1] = (ushort)(i * 4 + 1);
+                            ib[i * 6 + 2] = (ushort)(i * 4 + 2);
+                            ib[i * 6 + 3] = (ushort)(i * 4 + 2);
+                            ib[i * 6 + 4] = (ushort)(i * 4 + 1);
+                            ib[i * 6 + 5] = (ushort)(i * 4 + 3);
+                        }
+                        return new ConstBuffer<ushort>(r, ibLen, ResourceUsage.Immutable, BindFlags.IndexBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, ib);
+                    }),
+                });
             }
 
             #region Raster Init

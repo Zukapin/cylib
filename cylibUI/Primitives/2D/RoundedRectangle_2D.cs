@@ -53,9 +53,9 @@ namespace cylib
             this.renderer = renderer;
             this.em = em;
 
-            shader = renderer.Assets.GetShader(ShaderAssets.ROUNDED_RECTANGLE_2D);
-            buf = renderer.Assets.GetVertexBuffer(VertexBufferAssets.QUAD_POS_TEX_UNIT);
-            buffer = renderer.Assets.GetBuffer<RoundedRectData>(BufferAssets.ROUNDED_RECT);
+            shader = renderer.Assets.getAsset(ShaderAssets.ROUNDED_RECTANGLE_2D);
+            buf = renderer.Assets.getAsset(VertexBufferAssets.QUAD_POS_TEX_UNIT);
+            buffer = renderer.Assets.getAsset<RoundedRectData>(BufferAssets.ROUNDED_RECT);
 
             position = new Vector2();
             scale = new Vector2();
