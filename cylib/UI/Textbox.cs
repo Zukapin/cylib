@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using Keys = SDL2.SDL.SDL_Keycode;
-using Color = SharpDX.Color;
+using System.Drawing;
 
 namespace cylib
 {
@@ -163,13 +163,13 @@ namespace cylib
         const float buffer = 10;
         const float textHeightScoot = -4;
 
-        static readonly Color bgColor = new Color(40, 40, 40);
-        static readonly Color activeColor = new Color(20, 20, 20);
+        static readonly Color bgColor = Color.FromArgb(40, 40, 40);
+        static readonly Color activeColor = Color.FromArgb(20, 20, 20);
         static readonly Color outlineColor = Color.White;
 
         static readonly Color fontColor = Color.White;
         static readonly Color cursorColor = Color.White;
-        static readonly Color selColor = new Color(80, 80, 255);
+        static readonly Color selColor = Color.FromArgb(80, 80, 255);
 
         Renderer renderer;
         EventManager em;
@@ -286,7 +286,7 @@ namespace cylib
             bg.borderColor = outlineColor;
             bg.borderThickness = 1f;
 
-            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
             font.anchor = FontAnchor.CENTER_LEFT;
             font.color = fontColor;
 

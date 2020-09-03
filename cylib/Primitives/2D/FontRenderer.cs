@@ -10,8 +10,6 @@ using System.Runtime.InteropServices;
 
 using SharpDX.Direct3D11;
 
-using Color = SharpDX.Color;
-
 namespace cylib
 {
     [StructLayout(LayoutKind.Explicit, Size = 20)]
@@ -111,11 +109,11 @@ namespace cylib
             this.font = font;
 
             if (font.isSDF)
-                shader = renderer.Assets.GetShader(ShaderAssets.FONT_SDF);
+                shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_FONT_SDF);
             else
-                shader = renderer.Assets.GetShader(ShaderAssets.FONT_BITMAP);
-            glyphBuf = renderer.Assets.GetBuffer<FontGlyphBuffer>(BufferAssets.FONT);
-            colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(BufferAssets.COLOR);
+                shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_FONT_SDF);
+            glyphBuf = renderer.Assets.GetBuffer<FontGlyphBuffer>(Renderer.DefaultAssets.BUF_FONT);
+            colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
             sampler = renderer.samplerLinear;
 
             pos = new Vector2();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
-
-using Color = SharpDX.Color;
+using System.Drawing;
 
 namespace cylib
 {
@@ -143,7 +142,7 @@ namespace cylib
             point.borderColor = baseColor;
             point.mainColor = bgColor;
 
-            font = new FontRenderer(renderer, em, priority, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
             font.color = fontColor;
             font.anchor = FontAnchor.CENTER_LEFT;
 

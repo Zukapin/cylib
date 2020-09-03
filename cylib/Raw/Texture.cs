@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Drawing;
 
 using SharpDX;
 using SharpDX.Direct3D11;
@@ -305,14 +306,14 @@ namespace cylib
             return (byte)((Math.Pow(linear, 1.0 / 2.4) * 1.055 - 0.055) * 255.0);
         }
 
-        public static Vector4 convertToLinear(SharpDX.Color color)
+        public static Vector4 convertToLinear(Color color)
         {
             return new Vector4(convertToLinear(color.R, 0), convertToLinear(color.G, 1), convertToLinear(color.B, 2), convertToLinear(color.A, 3));
         }
 
-        public static SharpDX.Color convertToSrgb(Vector4 linear)
+        public static Color convertToSrgb(Vector4 linear)
         {
-            return new SharpDX.Color(converToSRgb(linear.X, 0), converToSRgb(linear.Y, 1), converToSRgb(linear.Z, 2), converToSRgb(linear.W, 3));
+            return Color.FromArgb(converToSRgb(linear.W, 3), converToSRgb(linear.X, 0), converToSRgb(linear.Y, 1), converToSRgb(linear.Z, 2));
         }
 
         public void Dispose()

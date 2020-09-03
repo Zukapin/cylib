@@ -17,10 +17,10 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 using Resource = SharpDX.Direct3D11.Resource;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
-using Color = SharpDX.Color;
 
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
+using BepuUtilities;
 
 namespace cylib
 {
@@ -185,6 +185,24 @@ namespace cylib
             public const string BUF_COLOR = "BUF_COLOR";
             public const string BUF_ROUNDED_RECT = "BUF_ROUNDED_RECT";
             public const string BUF_QUAD_INDEX = "BUF_QUAD_INDEX";
+
+            public const string FONT_DEFAULT = "FONT_DEFAULT";
+
+            public const string SH_COMPILE = "SH_COMPILE";
+            public const string SH_LIGHT_DIRECTIONAL = "SH_LIGHT_DIRECTIONAL";
+            public const string SH_FONT_BITMAP = "SH_FONT_BITMAP";
+            public const string SH_FONT_SDF = "SH_FONT_SDF";
+            public const string SH_LIGHT_POINT = "SH_LIGHT_POINT";
+            public const string SH_ROUNDED_RECTANGLE_2D = "SH_ROUNDED_RECTANGLE_2D";
+            public const string SH_POS_TEX = "SH_POS_TEX";
+            public const string SH_POS_NORM_TEX = "SH_POS_NORM_TEX";
+            public const string SH_POS_NORM_MAPTEX = "SH_POS_NORM_MAPTEX";
+            public const string SH_POS_NORM_SCOLOR = "SH_POS_NORM_SCOLOR";
+
+            public const string SH_DEBUG_DEPTH = "SH_DEBUG_DEPTH";
+            public const string SH_DEBUG_NORMAL = "SH_DEBUG_NORMAL";
+            public const string SH_DEBUG_LIGHT = "SH_DEBUG_LIGHT";
+            public const string SH_DEBUG_COLOR = "SH_DEBUG_COLOR";
         }
 
 
@@ -233,6 +251,7 @@ namespace cylib
                 context = Device.ImmediateContext;
 
                 assetManager = new AssetManager(this);
+                assetManager.AddAssetBlob("cylibassets.blob");
 
                 assetManager.AddVertexBuffers(new List<(string, VBLoader)>()
                 {

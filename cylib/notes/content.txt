@@ -1,0 +1,29 @@
+﻿Font Content Args:
+NUMOUT - Number of Output Files - Default = 1
+	- The number of output files for this font. Other arguments will expect a ';' delimited list, if this is greater than 1.
+
+NAME - Asset Name - Default = FONT_*filename*
+	- The asset name as viewed from the asset manager. What is used when calling LoadFont(*name*);
+
+SUPPORTEDCHARS - Supported Character Set - Default = ASCII table, more or less
+	- Does not expect a list when there's more than one output -- all outputs use the same character set.
+
+ISSDF - Is the output an SDF Font - Default = true
+	- If true, outputs a Signed Distance Field font atlas. If false, outputs a BMP atlas.
+
+ATLASWIDTH - Atlas output width - Default = 1024
+	- The maximum width, in pixels, of the output atlas. Mainly a consideration for how large of a texture the GPU can nicely load
+
+ATLASHEIGHT - Atlas output height - Default = 32
+	- The maximum height, in pixels, of a character in the output atlas. Has a very large effect on BMP fonts, less important on SDF fonts.
+
+PACKINGBUFFER - The buffer size, in pixels, around each character in the atlas - Default = 4
+	- The 'deadspace' around each character in the atlas. Mostly exists so linear sampling of the font atlas doesn't pick up neighboring characters.
+
+RENDERHEIGHT - Render Height, for SDF fonts, in pixels - Default = 1024
+	- The render size, in pixels, of the base characters used to create the SDF. Related to the SDF Range
+
+SDFRANGE - SDF Search Range - Default = 64f
+	- The 'range', in pixels, the SDF creation looks for the nearest border in the character render.
+	- Effects the range of the sdf output -- larger ranges will have 'softer' borders, but take longer to calculate as it searches for borders in the render.
+	- If you increase/decrease the render height, you will probably want to change this as well.

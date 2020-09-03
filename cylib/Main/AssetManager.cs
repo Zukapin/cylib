@@ -49,7 +49,7 @@ namespace cylib
         /// </summary>
         class AssetBlob : IDisposable
         {
-            public static List<(string name, AssetTypes type, long offset, long len)> ParseHeader(string file, out long HeaderOffset)
+            public static List<(string name, AssetTypes type, long offset, long len)> ParseHeader(string file)
             {
                 var toRet = new List<(string name, AssetTypes type, long offset, long len)>();
 
@@ -57,6 +57,7 @@ namespace cylib
                 using var fr = new BinaryReader(fs, Encoding.Unicode, true);
 
                 int numAssets = fr.ReadInt32();
+                long headerLen = fr.ReadInt64();
 
                 for (int i = 0; i < numAssets; i++)
                 {
@@ -65,10 +66,8 @@ namespace cylib
                     long offset = fr.ReadInt64();
                     long len = fr.ReadInt64();
 
-                    toRet.Add((name, t, offset, len));
+                    toRet.Add((name, t, offset + headerLen, len));
                 }
-
-                HeaderOffset = fs.Position;
 
                 return toRet;
             }
@@ -77,7 +76,6 @@ namespace cylib
             readonly AssetDat[] assetToOffset;
             Stream stream;
             LimitStream pubStream;
-            readonly long HeaderOffset;
 
             public readonly int startID;
 
@@ -86,13 +84,12 @@ namespace cylib
             /// </summary>
             public readonly int endID;
 
-            public AssetBlob(string file, int startID, AssetDat[] assetToOffset, long HeaderOffset)
+            public AssetBlob(string file, int startID, AssetDat[] assetToOffset)
             {
                 this.file = file;
                 this.startID = startID;
                 this.assetToOffset = assetToOffset;
                 endID = startID + assetToOffset.Length;
-                this.HeaderOffset = HeaderOffset;
             }
 
             /// <summary>
@@ -147,7 +144,7 @@ namespace cylib
                 }
 
                 var dat = assetToOffset[a];
-                pubStream.SetLimits(HeaderOffset + dat.offset, dat.len);
+                pubStream.SetLimits(dat.offset, dat.len);
                 return pubStream;
             }
 
@@ -180,16 +177,18 @@ namespace cylib
         public void AddAssetBlob(string blob)
         {
             int startID = assetNameToID.Count;
-            var assets = AssetBlob.ParseHeader(blob, out long HeaderOffset);
+            var assets = AssetBlob.ParseHeader(blob);
             AssetDat[] assetData = new AssetDat[assets.Count];
             for (int i = 0; i < assetData.Length; i++)
             {
                 var a = assets[i];
                 assetData[i] = new AssetDat(a.offset, a.len);
                 assetNameToID.Add(a.name, (i + startID, a.type));
+
+                Logger.WriteLine(LogType.DEBUG, "Added asset: " + a.name + " " + a.type);
             }
 
-            var b = new AssetBlob(blob, startID, assetData, HeaderOffset);
+            var b = new AssetBlob(blob, startID, assetData);
             assetBlobs.Add(b);
         }
 
@@ -381,10 +380,10 @@ namespace cylib
                     return LoadCustom(a);
             }
 
-            throw new Exception("Invalid asset type, can't load: " + a + " " + inf.type);
+            throw new Exception("Invalid asset, can't load: " + name + " " + a + " " + inf.type);
         }
 
-        private IDisposable GetAsset(string a)
+        public IDisposable GetAsset(string a)
         {
             IDisposable toReturn = null;
 
@@ -418,27 +417,47 @@ namespace cylib
 
         public Shader GetShader(string a)
         {
-            return (Shader)GetAsset(a);
+            var ret = GetAsset(a);
+            if (ret is Shader shader)
+                return shader;
+
+            throw new Exception("Wrong asset type, this is not a shader " + a);
         }
 
         public Texture GetTexture(string a)
         {
-            return (Texture)GetAsset(a);
+            var ret = GetAsset(a);
+            if (ret is Texture texture)
+                return texture;
+
+            throw new Exception("Wrong asset type, this is not a texture " + a);
         }
 
         public VertexBuffer GetVertexBuffer(string a)
         {
-            return (VertexBuffer)GetAsset(a);
+            var ret = GetAsset(a);
+            if (ret is VertexBuffer vertexBuffer)
+                return vertexBuffer;
+
+            throw new Exception("Wrong asset type, this is not a Vertex Buffer " + a);
         }
 
         public Font GetFont(string a)
         {
-            return (Font)GetAsset(a);
+            var ret = GetAsset(a);
+            if (ret is Font font)
+                return font;
+
+            throw new Exception("Wrong asset type, this is not a Font " + a);
         }
 
         public ConstBuffer<T> GetBuffer<T>(string a) where T : struct
         {
-            return (ConstBuffer<T>)GetAsset(a);
+            var ret = GetAsset(a);
+            if (ret is ConstBuffer<T> buf)
+                return buf;
+
+            throw new Exception("Wrong asset type, this is not the right type of buffer " + a);
         }
 
         private Shader LoadShader(int shader)

@@ -6,7 +6,6 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 
 using BepuUtilities;
-using Color = SharpDX.Color;
 
 namespace cylib
 {
@@ -48,7 +47,7 @@ namespace cylib
         {
             get
             {
-                return new Color(myDat.colorIntensity.X, myDat.colorIntensity.Y, myDat.colorIntensity.Z);
+                return Color.FromArgb((int)(myDat.colorIntensity.X * 255), (int)(myDat.colorIntensity.Y * 255), (int)(myDat.colorIntensity.Z * 255));
             }
             set
             {
@@ -79,7 +78,7 @@ namespace cylib
             this.em = em;
 
             myDat = new DirectionalLightBuffer(dir, color, intensity);
-            buf = renderer.Assets.GetBuffer<DirectionalLightBuffer>(BufferAssets.DIRECTIONAL_LIGHT);
+            buf = renderer.Assets.GetBuffer<DirectionalLightBuffer>(Renderer.DefaultAssets.BUF_DIRECTIONAL_LIGHT);
 
             em.addLight(this);
         }

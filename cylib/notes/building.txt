@@ -21,6 +21,11 @@ update bepuphus to v2
 updating assetmanager -- 
 	shader compiler needs to parse and save vertex elements
 
+content pipeline notes:
+	may need to rebuild *twice* for any changes in cylib content to reach something using it. its using the project 'copy-to-output-directory' thing in the csproj, which apparently gets run before the build step
+	intermediate content pipeline stuff is saved in the cyasset/bin directory. it doesn't get cleared when using 'clean', as it can take Awhile to rebuild
+
+
 Dependencies are split into library and build. Library dependencies are required at runtime on the client computer. Build dependencies are only required for development.
 
 Library Dependencies:
@@ -41,6 +46,14 @@ SDL2
 	- SDL2_image dlls from https://www.libsdl.org/projects/SDL_image/
 		- requires libjpeg, libpng, zlib, sdl2_image -- all with licenses.
 	- non-windows binaries not supported, need a test machine
+
+BepuUtilities
+	- Updated 8/31/2020
+	- Used for Matrix for Cameras, basically? Whatevs
+
+SharpDX
+	- Updated ?
+	- Used for DX11 bindings -- switching to https://github.com/orgs/terrafx/packages soon™
 
 Build Dependencies:
 SDL2

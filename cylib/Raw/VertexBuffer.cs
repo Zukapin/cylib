@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
-using Color = SharpDX.Color;
 
 using BepuUtilities;
 

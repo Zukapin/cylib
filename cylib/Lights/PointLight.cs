@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-using Color = SharpDX.Color;
 namespace cylib
 {
     [StructLayout(LayoutKind.Explicit, Size = 32)]
@@ -58,7 +57,7 @@ namespace cylib
         {
             get
             {
-                return new Color(myDat.colorIntensity.X, myDat.colorIntensity.Y, myDat.colorIntensity.Z);
+                return Color.FromArgb((int)(myDat.colorIntensity.X * 255), (int)(myDat.colorIntensity.Y * 255), (int)(myDat.colorIntensity.Z * 255));
             }
             set
             {
@@ -89,7 +88,7 @@ namespace cylib
             this.em = em;
 
             myDat = new PointLightBuffer(pos, color, radius, intensity);
-            buf = renderer.Assets.GetBuffer<PointLightBuffer>(BufferAssets.POINT_LIGHT);
+            buf = renderer.Assets.GetBuffer<PointLightBuffer>(Renderer.DefaultAssets.BUF_POINT_LIGHT);
 
             em.addLight(this);
         }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Drawing;
 
-using Color = SharpDX.Color;
 using BepuUtilities;
 
 using SharpDX.Direct3D11;
@@ -36,10 +36,10 @@ namespace cylib
             this.em = em;
             this.tex = tex;
 
-            shader = renderer.Assets.GetShader(ShaderAssets.POS_TEX);
-            buf = renderer.Assets.GetVertexBuffer(VertexBufferAssets.CIRCLE_POS_TEX_UNIT);
+            shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_POS_TEX);
+            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_CIRCLE_POS_TEX_UNIT);
             sampler = renderer.samplerLinear;
-            worldBuffer = renderer.Assets.GetBuffer<Matrix>(BufferAssets.WORLD);
+            worldBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_WORLD);
 
             position = new Vector2();
             scale = new Vector2();

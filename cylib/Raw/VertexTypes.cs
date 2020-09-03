@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System.Runtime.InteropServices;
-
-using Color = SharpDX.Color;
 
 using BepuUtilities;
 
@@ -27,7 +26,7 @@ namespace cylib
         public VertexPositionColor(Vector3 pos, Color color)
         {
             this.pos = pos;
-            this.color = color.ToAbgr(); //this was changed from argb
+            this.color = color.ToArgb(); //this was changed from argb -- at some point, then changed back i have no idea if this will work
         }
 
         public readonly static InputElement[] vertexElements = new[]

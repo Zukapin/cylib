@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using log;
-using Color = SharpDX.Color;
+using System.Drawing;
 
 namespace cylib
 {
@@ -244,14 +244,14 @@ namespace cylib
             mouseHl.radius = borderRadius;
             mouseHl.enabled = false;
 
-            font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.GetFont(FontAssets.DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
             font.anchor = FontAnchor.CENTER_LEFT;
             font.text = labels[Selection];
 
             labelFonts = new FontRenderer[labels.Length];
             for (int i = 0; i < labelFonts.Length; i++)
             {
-                labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.GetFont(FontAssets.DEFAULT));
+                labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
                 labelFonts[i].anchor = FontAnchor.CENTER_LEFT;
                 labelFonts[i].text = labels[i];
                 labelFonts[i].enabled = false;

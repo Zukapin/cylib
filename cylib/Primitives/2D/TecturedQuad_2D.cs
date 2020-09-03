@@ -27,10 +27,10 @@ namespace cylib
             this.em = em;
             this.tex = tex;
 
-            shader = renderer.Assets.GetShader(ShaderAssets.POS_TEX);
-            buf = renderer.Assets.GetVertexBuffer(VertexBufferAssets.QUAD_POS_TEX_UNIT);
+            shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_POS_TEX);
+            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_QUAD_POS_TEX_UNIT);
             sampler = renderer.samplerLinear;
-            worldBuffer = renderer.Assets.GetBuffer<Matrix>(BufferAssets.WORLD);
+            worldBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_WORLD);
 
             position = new Vector2();
             scale = new Vector2();

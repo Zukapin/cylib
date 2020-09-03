@@ -72,6 +72,233 @@ namespace cyasset
             }
         }
 
+        public static void ProcessFont(string font, Dictionary<string, string> opts, DateTime optsTime, string tempDir, out ContentHeaderInformation[] outInf, out DateTime latestDate)
+        {
+            int numOutputs = 1;
+            if (opts.TryGetValue("NUMOUT", out string numString))
+            {
+                if (!int.TryParse(numString, out numOutputs))
+                    throw new Exception("NUMOUT Arg for font " + font + " is invalid: " + numString);
+
+                if (numOutputs < 1)
+                    throw new Exception("NUMOUT Arg for font " + font + " is invalid: " + numString);
+            }
+
+            string[] assetName = new string[numOutputs];
+            assetName[0] = "FONT_" + Path.GetFileNameWithoutExtension(font);
+            for (int i = 1; i < numOutputs; i++)
+            {
+                assetName[i] = assetName[0] + "_" + i;
+            }
+            if (numOutputs != 1)
+                assetName[0] = assetName[0] + "_0";
+
+            if (opts.TryGetValue("NAME", out string nameString))
+            {
+                if (numOutputs == 1)
+                    assetName[0] = nameString;
+                else
+                {
+                    var names = nameString.Split(";");
+                    if (names.Length != numOutputs)
+                        throw new Exception("NAME Arg for font " + font + " doesn't match the number of outputs: " + nameString);
+
+                    for(int i = 0; i < numOutputs; i++)
+                    {
+                        assetName[i] = names[i];
+                    }
+                }
+            }
+
+            string supportedChars = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[];',./\\~!@#$%^&*()_+{}:\"<>?|";
+            if (opts.TryGetValue("SUPPORTEDCHARS", out string optChars))
+            {
+                supportedChars = optChars;
+            }
+
+            bool[] isSDF = new bool[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                isSDF[i] = true;
+            }
+            if (opts.TryGetValue("ISSDF", out string sdfString))
+            {
+                var sdfSplit = sdfString.Split(';');
+                if (sdfSplit.Length != numOutputs)
+                    throw new Exception("ISSDF Arg for font " + font + " doesn't match the number of outputs: " + sdfSplit.Length + " " + numOutputs + " " + sdfString);
+
+                for (int i = 0; i < numOutputs; i++)
+                {
+                    if (bool.TryParse(sdfSplit[i], out bool boolParse))
+                    {
+                        isSDF[i] = boolParse;
+                    }
+                    else
+                        throw new Exception("ISSDF Arg for font " + font + " has an invalid bool: " + sdfString);
+                }
+            }
+
+            int[] maxAtlasWidth = new int[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                maxAtlasWidth[i] = 1024;
+            }
+            if (opts.TryGetValue("ATLASWIDTH", out string atlasWidthString))
+            {
+                var atlasSplit = atlasWidthString.Split(';');
+                if (atlasSplit.Length != numOutputs)
+                    throw new Exception("ATLASWIDTH Arg for font " + font + " doesn't match the number of outputs: " + atlasWidthString);
+
+                for (int i = 0; i < numOutputs; i++)
+                {
+                    if (int.TryParse(atlasSplit[i], out int intParse))
+                    {
+                        maxAtlasWidth[i] = intParse;
+                    }
+                    else
+                        throw new Exception("ATLASWIDTH Arg for font " + font + " has an invalid int: " + atlasWidthString);
+                }
+            }
+
+            int[] packingBuffer = new int[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                packingBuffer[i] = 4;
+            }
+            if (opts.TryGetValue("PACKINGBUFFER", out string packingString))
+            {
+                var packingSplit = packingString.Split(';');
+                if (packingSplit.Length != numOutputs)
+                    throw new Exception("PACKINGBUFFER Arg for font " + font + " doesn't match the number of outputs: " + packingString);
+
+                for (int i = 0; i < numOutputs; i++)
+                {
+                    if (int.TryParse(packingSplit[i], out int intParse))
+                    {
+                        packingBuffer[i] = intParse;
+                    }
+                    else
+                        throw new Exception("PACKINGBUFFER Arg for font " + font + " has an invalid int: " + packingString);
+                }
+            }
+
+            int[] renderHeight = new int[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                renderHeight[i] = 1024;
+            }
+            if (opts.TryGetValue("RENDERHEIGHT", out string renderHeightString))
+            {
+                var renderSplit = renderHeightString.Split(';');
+                if (renderSplit.Length != numOutputs)
+                    throw new Exception("RENDERHEIGHT Arg for font " + font + " doesn't match the number of outputs: " + renderHeightString);
+
+                for (int i = 0; i < numOutputs; i++)
+                {
+                    if (int.TryParse(renderSplit[i], out int intParse))
+                    {
+                        renderHeight[i] = intParse;
+                    }
+                    else
+                        throw new Exception("RENDERHEIGHT Arg for font " + font + " has an invalid int: " + renderHeightString);
+                }
+            }
+
+            int[] atlasHeight = new int[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                atlasHeight[i] = 32;
+            }
+            if (opts.TryGetValue("ATLASHEIGHT", out string atlasHeightString))
+            {
+                var atlasSplit = atlasHeightString.Split(';');
+                if (atlasSplit.Length != numOutputs)
+                    throw new Exception("ATLASHEIGHT Arg for font " + font + " doesn't match the number of outputs: " + atlasHeightString);
+
+                for (int i = 0; i < numOutputs; i++)
+                {
+                    if (int.TryParse(atlasSplit[i], out int intParse))
+                    {
+                        atlasHeight[i] = intParse;
+                    }
+                    else
+                        throw new Exception("ATLASHEIGHT Arg for font " + font + " has an invalid int: " + atlasHeightString);
+                }
+            }
+
+            float[] sdfRange = new float[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                sdfRange[i] = 64f;
+            }
+            if (opts.TryGetValue("SDFRANGE", out string sdfRangeString))
+            {
+                var sdfRangeSplit = sdfRangeString.Split(';');
+                if (sdfRangeSplit.Length != numOutputs)
+                    throw new Exception("SDFRANGE Arg for font " + font + " doesn't match the number of outputs: " + sdfRangeString);
+
+                for (int i = 0; i < numOutputs; i++)
+                {
+                    if (float.TryParse(sdfRangeSplit[i], out float floatParse))
+                    {
+                        sdfRange[i] = floatParse;
+                    }
+                    else
+                        throw new Exception("SDFRANGE Arg for font " + font + " has an invalid int: " + sdfRangeString);
+                }
+            }
+
+            string[] outputPaths = new string[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                outputPaths[i] = tempDir + font + i;
+            }
+
+            var lastInputTime = File.GetLastWriteTimeUtc(font);
+            if (optsTime > lastInputTime)
+                lastInputTime = optsTime;
+
+            latestDate = DateTime.MinValue;
+            outInf = new ContentHeaderInformation[numOutputs];
+            for (int i = 0; i < numOutputs; i++)
+            {
+                ContentHeaderInformation inf = new ContentHeaderInformation();
+                inf.FileLength = 0;
+                inf.Path = outputPaths[i];
+                inf.Type = AssetTypes.FONT;
+                inf.Name = assetName[i];
+
+                bool genNew = true;
+
+                var thisOutputTime = DateTime.MinValue;
+                if (File.Exists(outputPaths[i]))
+                {
+                    thisOutputTime = File.GetLastWriteTimeUtc(outputPaths[i]);
+                    if (thisOutputTime > lastInputTime)
+                    {//this file has been updated more recently than the inputs, so we can ignore
+                        genNew = false;
+                    }
+                }
+
+                //okay, we need to write the new output
+                if (genNew)
+                {
+                    Console.WriteLine("Processing font: " + font + " to output " + outputPaths[i] + " with asset name " + assetName[i]);
+                    var proc = new FontProcessor(isSDF[i], supportedChars, maxAtlasWidth[i], packingBuffer[i], renderHeight[i], atlasHeight[i], sdfRange[i]);
+                    proc.ProcessFont(font, outputPaths[i], Program.SAVE_DEBUG_FONTS);
+                    thisOutputTime = File.GetLastWriteTimeUtc(outputPaths[i]);
+                }
+
+                if (thisOutputTime > latestDate)
+                    latestDate = thisOutputTime;
+
+                FileInfo fileDetails = new FileInfo(outputPaths[i]);
+                inf.FileLength = fileDetails.Length;
+
+                outInf[i] = inf;
+            }
+        }
+
         //string of supported characters
         //whitespace characters handled specially by the renderer
         //space is in sup char list to gen kerning/advanceX info
@@ -79,8 +306,8 @@ namespace cyasset
         readonly string supportedChars = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[];',./\\~!@#$%^&*()_+{}:\"<>?|";
         readonly int maxAtlasWidth = 1024;
         readonly int packingBuffer = 4; //number of blank pixels added on all sides of a char in the atlas to ensure linear sampling doesn't pick up another char
-        readonly int renderHeight = 4096;
-        readonly int atlasHeight = 16;
+        readonly int renderHeight = 4096; //how tall, in pixels, we should render individual characters for SDF-processing
+        readonly int atlasHeight = 16; //how tall, in pixels, characters should be in the atlas
         readonly float sdfRange = 128f; //the 'range' to look for a border-pixel, in number of pixel
         readonly float heightRatio;
         float ascenderHeight;
@@ -106,7 +333,7 @@ namespace cyasset
             lib = new Library();
         }
 
-        public void ProcessFont(string path, string outPath)
+        public void ProcessFont(string path, string outPath, bool saveDebug)
         {
             Face face = new Face(lib, path);
             face.SetPixelSizes(0, (uint)renderHeight);
@@ -121,7 +348,8 @@ namespace cyasset
 
             SaveFont(bOut, outPath);
 
-            bOut.Save(outPath + ".png");
+            if (saveDebug)
+                bOut.Save(outPath + ".png");
         }
 
         /// <summary>
@@ -158,6 +386,12 @@ namespace cyasset
         /// </summary>
         private void SaveFont(Bitmap atlas, string outPath)
         {
+            var dir = Path.GetDirectoryName(outPath);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
             using (BinaryWriter wr = new BinaryWriter(new FileStream(outPath, FileMode.Create), System.Text.Encoding.Unicode))
             {
                 int type = 0;
@@ -428,8 +662,8 @@ namespace cyasset
                     {
                         int xi = (yi + w) * 4;
                         atlas.Buffer[xi + 0] = sdf[hi + w];
-                        atlas.Buffer[xi + 1] = 255;
-                        atlas.Buffer[xi + 2] = 255;
+                        atlas.Buffer[xi + 1] = 0;
+                        atlas.Buffer[xi + 2] = 0;
                         atlas.Buffer[xi + 3] = 255;
                     }
                 }
@@ -476,7 +710,7 @@ namespace cyasset
             ascenderHeight = (float)f.Size.Metrics.Ascender * r;
             descenderHeight = (float)f.Size.Metrics.Descender * r;
 
-            Console.WriteLine("test: " + f.Size.Metrics.Ascender + " " + f.Size.Metrics.Descender + " " + f.Size.Metrics.Height + " " + f.Size.Metrics.ScaleX + " " + f.Size.Metrics.ScaleY + " " + f.Size.Metrics.NominalHeight);
+            //Console.WriteLine("test: " + f.Size.Metrics.Ascender + " " + f.Size.Metrics.Descender + " " + f.Size.Metrics.Height + " " + f.Size.Metrics.ScaleX + " " + f.Size.Metrics.ScaleY + " " + f.Size.Metrics.NominalHeight);
 
             for (int i = 0; i < chars.Length; i++)
             {

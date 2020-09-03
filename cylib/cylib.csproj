@@ -14,198 +14,32 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
   </PropertyGroup>
-  
-  <ItemGroup Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Release'">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SDL2-CS\SDL2-CS.Core.csproj" />
+    <ProjectReference Include="..\..\bepuphysics2\BepuUtilities\BepuUtilities.csproj" />
     <PackageReference Include="SharpDX" Version="4.2.0" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
-    <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
   </ItemGroup>
   
   <ItemGroup>
-    <None Remove="Content\Effects\BorderedCircle.fx" />
-    <None Remove="Content\Effects\ColorDebug.fx" />
-    <None Remove="Content\Effects\Compile.fx" />
-    <None Remove="Content\Effects\DashedCircle.fx" />
-    <None Remove="Content\Effects\DepthDebug.fx" />
-    <None Remove="Content\Effects\DirectionalLight.fx" />
-    <None Remove="Content\Effects\DisplacementMap.fx" />
-    <None Remove="Content\Effects\FontBitmap.fx" />
-    <None Remove="Content\Effects\FontSDF.fx" />
-    <None Remove="Content\Effects\GradientCircle.fx" />
-    <None Remove="Content\Effects\LightDebug.fx" />
-    <None Remove="Content\Effects\Line.fx" />
-    <None Remove="Content\Effects\LineColored.fx" />
-    <None Remove="Content\Effects\NormalDebug.fx" />
-    <None Remove="Content\Effects\PointLight.fx" />
-    <None Remove="Content\Effects\PosNormMapTex.fx" />
-    <None Remove="Content\Effects\PosNormSColor.fx" />
-    <None Remove="Content\Effects\PosNormTex.fx" />
-    <None Remove="Content\Effects\PosTex.fx" />
-    <None Remove="Content\Effects\RoundedRectangle.fx" />
-    <None Remove="Content\Effects\RoundedRectangle2D.fx" />
-    <None Remove="Content\Effects\TestEffect.fx" />
-    <None Remove="Content\Fonts\callibmp128.cyf" />
-    <None Remove="Content\Fonts\callibmp16.cyf" />
-    <None Remove="Content\Fonts\callibmp32.cyf" />
-    <None Remove="Content\Fonts\callibmp64.cyf" />
-    <None Remove="Content\Fonts\callisdf128.cyf" />
-    <None Remove="Content\Fonts\callisdf16.cyf" />
-    <None Remove="Content\Fonts\callisdf32.cyf" />
-    <None Remove="Content\Fonts\callisdf64.cyf" />
-    <None Remove="Content\Fonts\segoeuibmp128.cyf" />
-    <None Remove="Content\Fonts\segoeuibmp16.cyf" />
-    <None Remove="Content\Fonts\segoeuibmp32.cyf" />
-    <None Remove="Content\Fonts\segoeuibmp64.cyf" />
-    <None Remove="Content\Fonts\segoeuisdf128.cyf" />
-    <None Remove="Content\Fonts\segoeuisdf16.cyf" />
-    <None Remove="Content\Fonts\segoeuisdf32.cyf" />
-    <None Remove="Content\Fonts\segoeuisdf64.cyf" />
-    <None Remove="Content\Textures\angelduck.png" />
-    <None Remove="Content\Textures\test.png" />
-    <None Remove="Content\Textures\TestPixel.bmp" />
-    <None Remove="Content\Textures\WhitePixel.bmp" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <TestGroup Include="Content\Effects\BorderedCircle.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </TestGroup>
-    <Content Include="Content\Effects\ColorDebug.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\Compile.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\DashedCircle.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\DepthDebug.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\DirectionalLight.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\DisplacementMap.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\FontBitmap.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\FontSDF.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\GradientCircle.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\LightDebug.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\Line.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\LineColored.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\NormalDebug.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\PointLight.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\PosNormMapTex.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\PosNormSColor.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\PosNormTex.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\PosTex.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\RoundedRectangle.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\RoundedRectangle2D.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Effects\TestEffect.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callibmp128.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callibmp16.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callibmp32.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callibmp64.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callisdf128.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callisdf16.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callisdf32.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\callisdf64.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuibmp128.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuibmp16.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuibmp32.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuibmp64.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuisdf128.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuisdf16.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuisdf32.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Fonts\segoeuisdf64.cyf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Textures\angelduck.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Textures\test.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Textures\TestPixel.bmp">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Textures\WhitePixel.bmp">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <CyContent Include="Content\Effects\**" />
+    <CyContent Include="Content\Fonts\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\bepuphysics2\BepuUtilities\BepuUtilities.csproj" />
-    <ProjectReference Include="..\..\SDL2-CS\SDL2-CS.Core.csproj" />
-  </ItemGroup>
+  <Target Name="CleanContent" AfterTargets="Clean">
+    <Delete Files="cylibassets.blob" />
+  </Target>
+
+  <Target Name="ContentBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet run -c $(CONFIGURATION) --project $(ProjectDir)..\cyasset --input=@(CyContent) --output=cylibassets.blob --cylib" />
+  </Target>
+
 
   <ItemGroup>
-    <Folder Include="Primitives\3D\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Update="cylibassets.blob">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\binds.cyb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

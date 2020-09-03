@@ -15,7 +15,6 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 using Resource = SharpDX.Direct3D11.Resource;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
-using Color = SharpDX.Color;
 
 using BepuUtilities;
 using Matrix = BepuUtilities.Matrix;
@@ -221,22 +220,22 @@ namespace cylib
             }
 
 
-            quad_postex_unit = renderer.Assets.GetVertexBuffer((int)VertexBufferAssets.QUAD_POS_TEX_UNIT);
+            quad_postex_unit = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_QUAD_POS_TEX_UNIT);
 
-            viewProjBuffer = renderer.Assets.GetBuffer<CameraBuffer>((int)BufferAssets.CAM_VIEWPROJ);
-            viewProjInvBuffer = renderer.Assets.GetBuffer<Matrix>((int)BufferAssets.CAM_INVVIEWPROJ);
-            worldBuffer = renderer.Assets.GetBuffer<Matrix>((int)BufferAssets.WORLD);
+            viewProjBuffer = renderer.Assets.GetBuffer<CameraBuffer>(Renderer.DefaultAssets.BUF_CAM_VIEWPROJ);
+            viewProjInvBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_CAM_INVVIEWPROJ);
+            worldBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_WORLD);
             #endregion
             #region Shader Setup
-            s_Compile = renderer.Assets.GetShader((int)ShaderAssets.COMPILE);
-            s_PointLight = renderer.Assets.GetShader((int)ShaderAssets.LIGHT_POINT);
-            s_DirectionalLight = renderer.Assets.GetShader((int)ShaderAssets.LIGHT_DIRECTIONAL);
+            s_Compile = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_COMPILE);
+            s_PointLight = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_LIGHT_POINT);
+            s_DirectionalLight = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_LIGHT_DIRECTIONAL);
 
 #if DEBUG
-            s_ColorDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_COLOR);
-            s_DepthDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_DEPTH);
-            s_NormalDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_NORMAL);
-            s_LightDebug = renderer.Assets.GetShader((int)ShaderAssets.DEBUG_LIGHT);
+            s_ColorDebug = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_DEBUG_COLOR);
+            s_DepthDebug = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_DEBUG_DEPTH);
+            s_NormalDebug = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_DEBUG_NORMAL);
+            s_LightDebug = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_DEBUG_LIGHT);
 #endif
             #endregion
             #region Misc Stuff
@@ -252,21 +251,23 @@ namespace cylib
             #endregion
         }
 
-        private HashSet<int> GetOurAssets()
+        private HashSet<string> GetOurAssets()
         {
-            return new HashSet<int>()
+            return new HashSet<string>()
             {
-                (int)ShaderAssets.COMPILE,
-                (int)ShaderAssets.LIGHT_POINT,
-                (int)ShaderAssets.LIGHT_DIRECTIONAL,
-                (int)ShaderAssets.DEBUG_COLOR,
-                (int)ShaderAssets.DEBUG_DEPTH,
-                (int)ShaderAssets.DEBUG_NORMAL,
-                (int)ShaderAssets.DEBUG_LIGHT,
-                (int)VertexBufferAssets.QUAD_POS_TEX_UNIT,
-                (int)BufferAssets.WORLD,
-                (int)BufferAssets.CAM_VIEWPROJ,
-                (int)BufferAssets.CAM_INVVIEWPROJ
+                Renderer.DefaultAssets.SH_COMPILE,
+                Renderer.DefaultAssets.SH_LIGHT_POINT,
+                Renderer.DefaultAssets.SH_LIGHT_DIRECTIONAL,
+                Renderer.DefaultAssets.VB_QUAD_POS_TEX_UNIT,
+                Renderer.DefaultAssets.BUF_WORLD,
+                Renderer.DefaultAssets.BUF_CAM_VIEWPROJ,
+                Renderer.DefaultAssets.BUF_CAM_INVVIEWPROJ,
+#if DEBUG
+                Renderer.DefaultAssets.SH_DEBUG_COLOR,
+                Renderer.DefaultAssets.SH_DEBUG_DEPTH,
+                Renderer.DefaultAssets.SH_DEBUG_NORMAL,
+                Renderer.DefaultAssets.SH_DEBUG_LIGHT,
+#endif
             };
         }
 
@@ -274,10 +275,10 @@ namespace cylib
         {
             //assets we want during the scene
             //note - any changes here should be reflected equally in the loadthread and endload method
-            HashSet<int> assets = GetOurAssets();
+            var assets = GetOurAssets();
 
             //assets we want during load
-            HashSet<int> loadAssets = new HashSet<int>(assets);
+            var loadAssets = new HashSet<string>(assets);
 
             if (scene == null)
             {//if this is the first load without a scene, just do this single-threaded
@@ -306,8 +307,8 @@ namespace cylib
 
         private void LoadThread()
         {
-            HashSet<int> assets = GetOurAssets();
-            HashSet<int> loadAssets = new HashSet<int>(assets);
+            HashSet<string> assets = GetOurAssets();
+            HashSet<string> loadAssets = new HashSet<string>(assets);
             loadAssets.UnionWith(currentScene.GetPreloadAssetList());
             assets.UnionWith(currentScene.GetAssetList());
 
@@ -317,8 +318,8 @@ namespace cylib
 
         private void FinishLoad()
         {
-            HashSet<int> assets = GetOurAssets();
-            HashSet<int> loadAssets = new HashSet<int>(assets);
+            HashSet<string> assets = GetOurAssets();
+            HashSet<string> loadAssets = new HashSet<string>(assets);
             loadAssets.UnionWith(currentScene.GetPreloadAssetList());
             assets.UnionWith(currentScene.GetAssetList());
 
@@ -408,9 +409,9 @@ namespace cylib
         public void Draw()
         {
             //MRT Setup
-            renderer.Context.ClearRenderTargetView(colorRTV, Color.MidnightBlue);
-            renderer.Context.ClearRenderTargetView(normalRTV, Color.Black);
-            renderer.Context.ClearRenderTargetView(renderView, Color.Black);
+            renderer.Context.ClearRenderTargetView(colorRTV, new SharpDX.Mathematics.Interop.RawColor4(0.04f, 0.04f, 0.1725f, 0f));
+            renderer.Context.ClearRenderTargetView(normalRTV, new SharpDX.Mathematics.Interop.RawColor4());
+            renderer.Context.ClearRenderTargetView(renderView, new SharpDX.Mathematics.Interop.RawColor4());
             renderer.Context.ClearDepthStencilView(depthDSV, DepthStencilClearFlags.Depth, 0.0f, 0);
 
             renderer.Context.Rasterizer.SetViewport(0, 0, settings.resWidth, settings.resHeight);
@@ -439,13 +440,13 @@ namespace cylib
 
                 //Light Setup
                 renderer.Context.OutputMerger.SetTargets(lightRTV);
-                renderer.Context.ClearRenderTargetView(lightRTV, Color.Black);
+                renderer.Context.ClearRenderTargetView(lightRTV, new SharpDX.Mathematics.Interop.RawColor4());
                 renderer.Context.VertexShader.SetConstantBuffer(0, fullscreenCameraBuffer);
                 renderer.Context.PixelShader.SetConstantBuffer(0, viewProjBuffer.buf);
                 renderer.Context.PixelShader.SetConstantBuffer(2, viewProjInvBuffer.buf);
                 renderer.Context.PixelShader.SetSampler(0, renderer.samplerPoint);
 
-                renderer.Context.OutputMerger.SetBlendState(renderer.blendLight, Color.White, -1);
+                renderer.Context.OutputMerger.SetBlendState(renderer.blendLight, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
                 renderer.Context.InputAssembler.SetVertexBuffers(0, quad_postex_unit.vbBinding);
 
                 Matrix3x3.CreateScale(new Vector3(settings.resWidth, settings.resHeight, 1), out Matrix3x3 scaleMat);
@@ -470,14 +471,14 @@ namespace cylib
                 renderer.Context.VertexShader.SetConstantBuffer(0, viewProjBuffer.buf);
                 renderer.Context.PixelShader.SetShaderResources(0, 4, null, null, null, null);
                 renderer.Context.OutputMerger.SetTargets(renderView);
-                renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, Color.White, -1);
+                renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
 
                 //Draw Post Process Here
                 drawPostProcess3D();
             }
 
             //2D Setup
-            renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, Color.White, -1);
+            renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
             renderer.Context.VertexShader.SetConstantBuffer(0, fullscreenCameraBuffer);
             renderer.Context.OutputMerger.SetTargets(renderView);
 

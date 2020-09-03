@@ -3,6 +3,7 @@ using System.Text;
 
 using SharpDX;
 using SharpDX.Direct3D11;
+using SharpDX.DXGI;
 
 using System.IO;
 
@@ -26,8 +27,23 @@ namespace cylib
 
             vs = new VertexShader(renderer.Device, vsBytes);
 
-            if (inputFormat != null)
+            int numElements = fr.ReadInt32();
+
+            if (numElements > 0)
+            {
+                InputElement[] inputFormat = new InputElement[numElements];
+                for (int i = 0; i < numElements; i++)
+                {
+                    string name = fr.ReadString();
+                    int index = fr.ReadInt32();
+                    Format format = (Format)fr.ReadInt32();
+                    int slot = fr.ReadInt32();
+
+                    inputFormat[i] = new InputElement(name, index, format, slot);
+                }
+
                 layout = new InputLayout(renderer.Device, vsBytes, inputFormat);
+            }
             else
                 layout = null;
 

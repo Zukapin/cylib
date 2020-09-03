@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Drawing;
 
-using Color = SharpDX.Color;
 using BepuUtilities;
 
 namespace cylib
@@ -53,9 +53,9 @@ namespace cylib
             this.renderer = renderer;
             this.em = em;
 
-            shader = renderer.Assets.GetShader(ShaderAssets.ROUNDED_RECTANGLE_2D);
-            buf = renderer.Assets.GetVertexBuffer(VertexBufferAssets.QUAD_POS_TEX_UNIT);
-            buffer = renderer.Assets.GetBuffer<RoundedRectData>(BufferAssets.ROUNDED_RECT);
+            shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_ROUNDED_RECTANGLE_2D);
+            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_QUAD_POS_TEX_UNIT);
+            buffer = renderer.Assets.GetBuffer<RoundedRectData>(Renderer.DefaultAssets.BUF_ROUNDED_RECT);
 
             position = new Vector2();
             scale = new Vector2();

@@ -24,12 +24,12 @@ namespace cylib
         /// Generally better to include everything possible in this list, because the AssetManager will
         /// dispose of potentially unused assets before the load begins.
         /// </summary>
-        HashSet<int> GetAssetList();
+        HashSet<string> GetAssetList();
 
         /// <summary>
         /// Should return the list of assets this scene wants during load time.
         /// </summary>
-        HashSet<int> GetPreloadAssetList();
+        HashSet<string> GetPreloadAssetList();
 
         /// <summary>
         /// Minimum time in seconds to spend on loading. (Useful for splash screens)
