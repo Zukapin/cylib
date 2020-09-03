@@ -111,7 +111,7 @@ namespace cylib
             if (font.isSDF)
                 shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_FONT_SDF);
             else
-                shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_FONT_SDF);
+                shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_FONT_BITMAP);
             glyphBuf = renderer.Assets.GetBuffer<FontGlyphBuffer>(Renderer.DefaultAssets.BUF_FONT);
             colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
             sampler = renderer.samplerLinear;

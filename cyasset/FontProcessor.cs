@@ -185,7 +185,7 @@ namespace cyasset
             int[] renderHeight = new int[numOutputs];
             for (int i = 0; i < numOutputs; i++)
             {
-                renderHeight[i] = 1024;
+                renderHeight[i] = 256;
             }
             if (opts.TryGetValue("RENDERHEIGHT", out string renderHeightString))
             {
@@ -661,10 +661,10 @@ namespace cyasset
                     for (int w = 0; w < rW; w++)
                     {
                         int xi = (yi + w) * 4;
-                        atlas.Buffer[xi + 0] = sdf[hi + w];
-                        atlas.Buffer[xi + 1] = 0;
-                        atlas.Buffer[xi + 2] = 0;
-                        atlas.Buffer[xi + 3] = 255;
+                        atlas.Buffer[xi + 0] = 255;
+                        atlas.Buffer[xi + 1] = 255;
+                        atlas.Buffer[xi + 2] = 255;
+                        atlas.Buffer[xi + 3] = sdf[hi + w];
                     }
                 }
 
@@ -690,9 +690,9 @@ namespace cyasset
                     {
                         int xi = (yi + w) * 4;
                         atlas.Buffer[xi + 0] = src[hi + w + 0];
-                        atlas.Buffer[xi + 1] = 0;
-                        atlas.Buffer[xi + 2] = 0;
-                        atlas.Buffer[xi + 3] = 255;
+                        atlas.Buffer[xi + 1] = src[hi + w + 0];
+                        atlas.Buffer[xi + 2] = src[hi + w + 0];
+                        atlas.Buffer[xi + 3] = src[hi + w + 0];
                     }
                 }
 

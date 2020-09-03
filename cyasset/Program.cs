@@ -65,6 +65,25 @@ namespace cyasset
                     if (lastDate > lastContentUpdate)
                         lastContentUpdate = lastDate;
                 }
+
+                if (inFile.EndsWith(".fx"))
+                {
+                    //process shader
+                    ShaderCompiler.ProcessShader(inFile, opts, lastWrittenTo, tempDir, out var contentInf, out var lastDate);
+                    contentFiles.AddRange(contentInf);
+
+                    if (lastDate > lastContentUpdate)
+                        lastContentUpdate = lastDate;
+                }
+
+                if (inFile.EndsWith(".bmp") || inFile.EndsWith(".png") || inFile.EndsWith(".jpg"))
+                {
+                    ImageHandler.ProcessImage(inFile, opts, lastWrittenTo, tempDir, out var contentInf, out var lastDate);
+                    contentFiles.AddRange(contentInf);
+
+                    if (lastDate > lastContentUpdate)
+                        lastContentUpdate = lastDate;
+                }
             }
 
             //clean the build directory now -- anything in the directory that's not a direct output here can be delete'd

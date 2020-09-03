@@ -188,21 +188,21 @@ namespace cylib
 
             public const string FONT_DEFAULT = "FONT_DEFAULT";
 
-            public const string SH_COMPILE = "SH_COMPILE";
-            public const string SH_LIGHT_DIRECTIONAL = "SH_LIGHT_DIRECTIONAL";
-            public const string SH_FONT_BITMAP = "SH_FONT_BITMAP";
-            public const string SH_FONT_SDF = "SH_FONT_SDF";
-            public const string SH_LIGHT_POINT = "SH_LIGHT_POINT";
-            public const string SH_ROUNDED_RECTANGLE_2D = "SH_ROUNDED_RECTANGLE_2D";
-            public const string SH_POS_TEX = "SH_POS_TEX";
-            public const string SH_POS_NORM_TEX = "SH_POS_NORM_TEX";
-            public const string SH_POS_NORM_MAPTEX = "SH_POS_NORM_MAPTEX";
-            public const string SH_POS_NORM_SCOLOR = "SH_POS_NORM_SCOLOR";
+            public const string SH_COMPILE = "SH_Compile";
+            public const string SH_LIGHT_DIRECTIONAL = "SH_DirectionalLight";
+            public const string SH_FONT_BITMAP = "SH_FontBitmap";
+            public const string SH_FONT_SDF = "SH_FontSDF";
+            public const string SH_LIGHT_POINT = "SH_PointLight";
+            public const string SH_ROUNDED_RECTANGLE_2D = "SH_RoundedRectangle2D";
+            public const string SH_POS_TEX = "SH_PosTex";
+            public const string SH_POS_NORM_TEX = "SH_PosNormTex";
+            public const string SH_POS_NORM_MAPTEX = "SH_PosNormMapTex";
+            public const string SH_POS_NORM_SCOLOR = "SH_PosNormSColor";
 
-            public const string SH_DEBUG_DEPTH = "SH_DEBUG_DEPTH";
-            public const string SH_DEBUG_NORMAL = "SH_DEBUG_NORMAL";
-            public const string SH_DEBUG_LIGHT = "SH_DEBUG_LIGHT";
-            public const string SH_DEBUG_COLOR = "SH_DEBUG_COLOR";
+            public const string SH_DEBUG_DEPTH = "SH_DepthDebug";
+            public const string SH_DEBUG_NORMAL = "SH_NormalDebug";
+            public const string SH_DEBUG_LIGHT = "SH_LightDebug";
+            public const string SH_DEBUG_COLOR = "SH_ColorDebug";
         }
 
 

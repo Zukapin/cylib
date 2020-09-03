@@ -37,9 +37,10 @@ namespace cylib
                     string name = fr.ReadString();
                     int index = fr.ReadInt32();
                     Format format = (Format)fr.ReadInt32();
+                    int offset = fr.ReadInt32();
                     int slot = fr.ReadInt32();
 
-                    inputFormat[i] = new InputElement(name, index, format, slot);
+                    inputFormat[i] = new InputElement(name, index, format, offset, slot);
                 }
 
                 layout = new InputLayout(renderer.Device, vsBytes, inputFormat);
