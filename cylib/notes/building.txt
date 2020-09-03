@@ -1,29 +1,27 @@
 ﻿Build details
-
-goals:
-cylib is built into a library -- doesn't technically *need* anything else
-uses the build tool with something like
-
-  <ItemGroup>
-    <CyContent Include="Content\**" />
-  </ItemGroup>
-
-  <Target Name="ContentBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet run --project $(ProjectDir)..\TestBuilder --input=@(CyContent) --output=$(OutputPath)CyBlob.blob" />
-  </Target>
-
-projects using the lib can use the same thing to add additional content -- lib will scan current directory for any cyblob files on load?
-how to handle content files with possible options? shaders debugs, font sizing, etc? text file in same folder with .opt added, if non-default opts are requested?
-
 update dx bindings to https://github.com/orgs/terrafx/packages
 update bepuphus to v2
 
-updating assetmanager -- 
-	shader compiler needs to parse and save vertex elements
 
-content pipeline notes:
-	may need to rebuild *twice* for any changes in cylib content to reach something using it. its using the project 'copy-to-output-directory' thing in the csproj, which apparently gets run before the build step
-	intermediate content pipeline stuff is saved in the cyasset/bin directory. it doesn't get cleared when using 'clean', as it can take Awhile to rebuild
+Building using this library:
+If you're starting a new project, the easiest way is to copy the CoreTest project, then adjust the paths in the .csproj file.
+For moving an existing project, or debugging build problems:
+	- Your .csproj file will need something like:
+		  <ItemGroup>
+			<ProjectReference Include="..\..\cylib\cylib\cylib.csproj" />
+		  </ItemGroup>
+
+		  <ItemGroup>
+			<CyContent Include="Content\**" />
+		  </ItemGroup>
+
+		  <Target Name="ContentBuild" BeforeTargets="PreBuildEvent">
+			<Exec Command="dotnet run --project $(ProjectDir)..\..\cylib\cyasset --input=@(CyContent) --output=$(OutputPath)coretest.blob --coretest" />
+		  </Target>
+	- The reference to the cylib project can be just the dll -- but you must also copy the cylibassets.blob into your output directory.
+	- All the content you want put into the asset blob must be in the CyContent ItemGroup (When adding new items with VS, check to make sure it didn't auto-remove it)
+	- The --coretest argument should be replaced with anything unique per project, so the content pipeline can keep the intermediate content items separate
+	- For more details on the content pipeline, see the content notes.
 
 
 Dependencies are split into library and build. Library dependencies are required at runtime on the client computer. Build dependencies are only required for development.

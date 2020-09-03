@@ -1,4 +1,25 @@
-﻿Font Content Args:
+﻿General stuff about the content pipeline
+	- See 'building' for how to setup your csproj file
+	- When adding a content item, make sure VS didn't automatically remove it from the content group in your csproj file >.>
+	- VS will not detect content changes, so you need to tell it to Rebuild for content to update
+	- If you're editting the default library content, may take two builds for the changes to update (copy to output folder happens before the build step, for whatever reason)
+	- Intermediate build content may accrue in the cyasset/bin folder, if you have a few game projects. It generally will clean itself during builds for a single project.
+		- Deleting that entire folder is a good way to force a full actual rebuild
+
+Shader Args:
+INPUTELEMENTS - Shader Input Elements - Default = Auto-parse
+	- Expected format is a list [(string)ElementName];[(int)ElementIndex];[(int)ElementFormat];[(int)ElementOffset];[(int)ElementSlot];NextElement
+		- For more information about these args, look at how the Shader class in the library parses it
+	- A list with no ';' will assume you want null input elements
+	- If this arg isn't provided, it attempts to parse the input elements from the shader based on my usual conventions
+		- Looks for the vertex shader input struct as 'struct VS_IN', and parses until '}'
+		- Looks for POSITION, COLOR, NORMAL, BIONORMAL, TANGENT, TEXTURE, in that order with assumed types of vec3/rgba8/vec3/vec3/vec3/vec2 and index/slot of 0
+		- If you want something else, use this option
+
+Texture Args:
+N/A. Just copies the texture in as an asset. Finds .bmp, .png, .jpg
+
+Font Args:
 NUMOUT - Number of Output Files - Default = 1
 	- The number of output files for this font. Other arguments will expect a ';' delimited list, if this is greater than 1.
 
@@ -16,14 +37,16 @@ ATLASWIDTH - Atlas output width - Default = 1024
 
 ATLASHEIGHT - Atlas output height - Default = 32
 	- The maximum height, in pixels, of a character in the output atlas. Has a very large effect on BMP fonts, less important on SDF fonts.
+	- If you change this on an SDF Font, scale the Render Height by the same amount.
 
 PACKINGBUFFER - The buffer size, in pixels, around each character in the atlas - Default = 4
 	- The 'deadspace' around each character in the atlas. Mostly exists so linear sampling of the font atlas doesn't pick up neighboring characters.
 
-RENDERHEIGHT - Render Height, for SDF fonts, in pixels - Default = 1024
+RENDERHEIGHT - Render Height, for SDF fonts, in pixels - Default = 256
 	- The render size, in pixels, of the base characters used to create the SDF. Related to the SDF Range
+	- This seems to require scaling with the Atlas height due to shader magic I don't remember.
 
 SDFRANGE - SDF Search Range - Default = 64f
 	- The 'range', in pixels, the SDF creation looks for the nearest border in the character render.
 	- Effects the range of the sdf output -- larger ranges will have 'softer' borders, but take longer to calculate as it searches for borders in the render.
-	- If you increase/decrease the render height, you will probably want to change this as well.
+	- There is some magic going on here with the shader, so should probably never change off of 64.
