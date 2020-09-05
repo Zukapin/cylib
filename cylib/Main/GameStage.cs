@@ -99,17 +99,18 @@ namespace cylib
         float loadingTime = 0;
         Thread loadingThread;
 
-        public Renderer renderer;
+        public readonly Renderer renderer;
         RenderTargetView renderView;
 
-        public GameStage(Renderer renderer, Settings settings, InputHandler input)
+        public GameStage(Renderer renderer, Settings settings)
         {
             this.settings = settings;
-            this.input = input;
             this.renderer = renderer;
 
-            loadManager = new EventManager();
-            sceneManager = new EventManager();
+            input = new InputHandler(this);
+
+            loadManager = new EventManager(input);
+            sceneManager = new EventManager(input);
 
             activeManager = sceneManager;
             input.events = activeManager;
@@ -345,8 +346,12 @@ namespace cylib
         #region Update
         double timeLeftover = 0;
         Stopwatch frameTimer = new Stopwatch();
-        public void Update(double dt)
+        bool StageExit = false;
+        public bool Update(double dt)
         {
+            if (StageExit)
+                return false;
+
             frameTimer.Reset();
             frameTimer.Start();
 
@@ -354,7 +359,7 @@ namespace cylib
 
             double inputTime = frameTimer.Elapsed.TotalMilliseconds;
             if (inputTime > 1)
-                Logger.WriteLine(LogType.DEBUG, "Long input update detected: " + inputTime);
+                Logger.WriteLine(LogType.VERBOSE2, "Long input update detected: " + inputTime);
 
 #if DEBUG
             timeLeftover += dt * DEBUG_TIDI;
@@ -401,6 +406,8 @@ namespace cylib
             {
                 Logger.WriteLine(LogType.DEBUG, "Frame miss: " + updatesThisFrame + " " + dt);
             }
+
+            return true;
         }
         #endregion
 
@@ -600,9 +607,16 @@ namespace cylib
             renderer.Context.UnmapSubresource(b, 0);
         }
 
+        public void Exit()
+        {
+            SDL2.SDL.SDL_Quit();
+            Dispose();
+        }
+
         public void Dispose()
         {//called by Program.CloseForm() through FormClosing event.
             //nicely kill the current scene...
+            StageExit = true;
             currentScene.Dispose();
 
             //TODO: should probably kill all of our stuff too....

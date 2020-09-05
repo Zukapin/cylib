@@ -162,7 +162,7 @@ namespace cylib
 
                 for (int i = 0; i < loops; i++)
                 {
-                    var t = font.glyphs[text[i + index]];
+                    var t = font.glyphs.GetValueOrDefault(text[i + index], font.unsupportedGlyph);
 
                     float bear = t.bearingX * scale;
                     if (index == 0 && i == 0)
@@ -197,7 +197,7 @@ namespace cylib
 
                     if (i + index != text.Length - 1)
                     {
-                        penX += t.kerningMap[text[i + index + 1]] * scale;
+                        penX += t.kerningMap.GetValueOrDefault(text[i + index + 1], 0f) * scale;
                     }
                 }
 
@@ -212,12 +212,11 @@ namespace cylib
 
         public float getRenderWidth(string str)
         {
-
             float width = 0;
 
             for (int i = 0; i < str.Length; i++)
             {
-                var t = font.glyphs[str[i]];
+                var t = font.glyphs.GetValueOrDefault(str[i], font.unsupportedGlyph);
 
                 if (i == 0)
                     width -= t.bearingX * scale;
@@ -226,7 +225,7 @@ namespace cylib
 
                 if (i != str.Length - 1)
                 {
-                    width += t.kerningMap[str[i + 1]] * scale;
+                    width += t.kerningMap.GetValueOrDefault(str[i + 1], 0) * scale;
                 }
             }
 

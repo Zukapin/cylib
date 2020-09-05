@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.IO;
 
+using Scancode = SDL2.SDL.SDL_Scancode;
 using Keys = SDL2.SDL.SDL_Keycode;
 
 using log;
@@ -179,9 +180,9 @@ namespace cylib
             return !a.Equals(b);
         }
 
-        public string getDisplay(Keys k)
+        public string getDisplay(Scancode s)
         {
-            string toReturn = k.ToString();
+            string toReturn = s.ToString();
             if (!caresAboutModifiers)
                 return toReturn;
             if (requiresShift)
@@ -198,7 +199,7 @@ namespace cylib
     class ActionMapper
     {
         InputHandler input;
-        Dictionary<Keys, List<KeyMap>> keyToAction;
+        Dictionary<Scancode, List<KeyMap>> keyToAction;
 
         /*
         Dictionary<ControllerButton, ActionType> controllerToAction;
@@ -210,7 +211,7 @@ namespace cylib
         {
             this.input = input;
 
-            keyToAction = new Dictionary<Keys, List<KeyMap>>();
+            keyToAction = new Dictionary<Scancode, List<KeyMap>>();
             //controllerToAction = new Dictionary<ControllerButton, ActionType>();
             //axisToAction = new Dictionary<Axis, ActionType>();
             //triggerToAction = new Dictionary<Trigger, ActionType>();
@@ -223,7 +224,7 @@ namespace cylib
         {
             List<KeyMap> m;
 
-            if (!keyToAction.TryGetValue(key.k, out m))
+            if (!keyToAction.TryGetValue(key.s, out m))
             {
                 args = ActionEventArgs.None;
                 return false;
@@ -264,7 +265,7 @@ namespace cylib
         /// Ways this can fail:
         ///     1. Attempting to bind a key to an action that doesn't support keys.
         /// </summary>
-        public bool addKeyAction(Keys k, bool shift, bool ctrl, bool alt, ActionType action)
+        public bool addKeyAction(Scancode s, bool shift, bool ctrl, bool alt, ActionType action)
         {
             if (!Action.ActionSupportsButton(action))
                 return false;
@@ -273,12 +274,12 @@ namespace cylib
             List<KeyMap> m;
             KeyMap map = new KeyMap(action, caresAboutMods, shift, ctrl, alt);
 
-            if (!keyToAction.TryGetValue(k, out m))
+            if (!keyToAction.TryGetValue(s, out m))
             {
                 m = new List<KeyMap>();
                 m.Add(map);
-                keyToAction.Add(k, m);
-                input.onBindingChange(k, map, true);
+                keyToAction.Add(s, m);
+                input.onBindingChange(s, map, true);
                 return true;
             }
 
@@ -290,19 +291,19 @@ namespace cylib
             {//nothing else matters, just unbind all of the other keys here
                 while (m.Count != 0)
                 {
-                    unbindKey(k, m[0]);
+                    unbindKey(s, m[0]);
                 }
 
                 m.Add(map);
-                input.onBindingChange(k, map, true);
+                input.onBindingChange(s, map, true);
                 return true;
             }
 
             if (m.Count == 1 && !m[0].caresAboutModifiers)
             {//the action already bound here doesn't care about modifiers, so we have to unbind it
-                unbindKey(k, m[0]);
+                unbindKey(s, m[0]);
                 m.Add(map);
-                input.onBindingChange(k, map, true);
+                input.onBindingChange(s, map, true);
                 return true;
             }
 
@@ -311,7 +312,7 @@ namespace cylib
             {
                 if ((shift == m[i].requiresShift) && (ctrl == m[i].requiresCtrl) && (alt == m[i].requiresAlt))
                 {//we found an exact conflict, so remove this key
-                    unbindKey(k, m[i]);
+                    unbindKey(s, m[i]);
 
                     //there can't be two conflicts, so we're done here.
                     break;
@@ -320,17 +321,17 @@ namespace cylib
 
             //either we didn't find any conflicts, or we did and removed it
             m.Add(map);
-            input.onBindingChange(k, map, true);
+            input.onBindingChange(s, map, true);
             return true;
         }
 
-        private void unbindKey(Keys k, KeyMap m)
+        private void unbindKey(Scancode s, KeyMap m)
         {
             List<KeyMap> list;
 
-            if (!keyToAction.TryGetValue(k, out list))
+            if (!keyToAction.TryGetValue(s, out list))
             {
-                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the key binding: " + k);
+                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the key binding: " + s);
                 return;
             }
 
@@ -339,12 +340,12 @@ namespace cylib
                 if (list[i] == m)
                 {
                     list.RemoveAt(i);
-                    input.onBindingChange(k, m, false);
+                    input.onBindingChange(s, m, false);
                     return;
                 }
             }
 
-            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the exact key map: " + k);
+            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the exact key map: " + s);
         }
         #endregion
 
@@ -391,11 +392,11 @@ namespace cylib
                             continue;
                         }
 
-                        Keys k;
+                        Scancode s;
                         bool shift, ctrl, alt;
                         ActionType action;
 
-                        if (!Enum.TryParse(parts[1], out k))
+                        if (!Enum.TryParse(parts[1], out s))
                         {
                             Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find key value in a key binding line: " + parts[1]);
                             continue;
@@ -425,7 +426,7 @@ namespace cylib
                             continue;
                         }
 
-                        addKeyAction(k, shift, ctrl, alt, action);
+                        addKeyAction(s, shift, ctrl, alt, action);
                     }
                     else
                     {

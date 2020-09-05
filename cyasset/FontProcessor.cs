@@ -110,7 +110,7 @@ namespace cyasset
                 }
             }
 
-            string supportedChars = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[];',./\\~!@#$%^&*()_+{}:\"<>?|";
+            string supportedChars = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[];',./\\~!@#$%^&*()_+{}:\"<>?|\u25A1";
             if (opts.TryGetValue("SUPPORTEDCHARS", out string optChars))
             {
                 supportedChars = optChars;

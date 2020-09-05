@@ -61,59 +61,12 @@ namespace cylib
 
         public readonly Dictionary<char, GlyphData> glyphs = new Dictionary<char, GlyphData>();
 
+        public readonly GlyphData unsupportedGlyph;
+
 #if DEBUG
         public Font(Renderer renderer, string filePath)
+            : this(renderer, new FileStream(filePath, FileMode.Open))
         {
-            using (BinaryReader rs = new BinaryReader(new FileStream(filePath, FileMode.Open), Encoding.Unicode))
-            {
-                int type = rs.ReadInt32();
-                isSDF = type == 1;
-                atlasHeight = (float)rs.ReadInt32();
-                ascenderHeight = rs.ReadSingle();
-                descenderHeight = rs.ReadSingle();
-                packingBuffer = rs.ReadInt32();
-
-                int aWidth = rs.ReadInt32();
-                int aHeight = rs.ReadInt32();
-
-                int numChars = rs.ReadInt32();
-
-                for (int i = 0; i < numChars; i++)
-                {
-                    char c = rs.ReadChar();
-                    float aPosX = rs.ReadInt32() / (float)aWidth;
-                    float aPosY = rs.ReadInt32() / (float)aHeight;
-                    float width = rs.ReadSingle() / aWidth;
-                    float height = rs.ReadSingle() / aHeight;
-                    float bearingX = rs.ReadSingle();
-                    float bearingY = rs.ReadSingle();
-                    float advanceX = rs.ReadSingle();
-                    float gWidth = rs.ReadSingle();
-                    float gHeight = rs.ReadSingle();
-
-                    int numKern = rs.ReadInt32();
-
-                    Dictionary<char, float> kern = new Dictionary<char, float>();
-                    for (int t = 0; t < numKern; t++)
-                    {
-                        char b = rs.ReadChar();
-                        float k = rs.ReadSingle();
-
-                        kern.Add(b, k);
-                    }
-
-                    glyphs.Add(c, new GlyphData(aPosX, aPosY, width, height, bearingX, bearingY, advanceX, gWidth, gHeight, kern));
-                }
-
-                byte[] img = new byte[aWidth * aHeight * 4];
-
-                for (int i = 0; i < img.Length; i++)
-                {
-                    img[i] = rs.ReadByte();
-                }
-
-                atlas = new Texture(renderer, img, aWidth, aHeight, 0);
-            }
         }
 #endif
 
@@ -169,6 +122,8 @@ namespace cylib
 
                 atlas = new Texture(renderer, img, aWidth, aHeight, 0);
             }
+
+            unsupportedGlyph = glyphs.GetValueOrDefault('\u25A1', glyphs['a']);
         }
 
         public void Dispose()

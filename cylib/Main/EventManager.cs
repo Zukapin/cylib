@@ -18,6 +18,7 @@ namespace cylib
             }
         }
 
+        /* I'm not actually sure why this specifically existed -- input events stop on
         private readonly PriorityList<OnFocusChange> e_focusChange = new PriorityList<OnFocusChange>();
         public IEnumerable<OnFocusChange> focusChangeList
         {
@@ -26,6 +27,7 @@ namespace cylib
                 return e_focusChange;
             }
         }
+        */
 
         private readonly PriorityList<OnAxisMove> e_axisMove = new PriorityList<OnAxisMove>();
         public IEnumerable<OnAxisMove> axisMoveList
@@ -126,9 +128,21 @@ namespace cylib
         }
         #endregion
 
-        public EventManager()
-        {
+        private InputHandler input;
 
+        public EventManager(InputHandler input)
+        {
+            this.input = input;
+        }
+
+        public void StartTyping(OnTextInput callback)
+        {
+            input.StartTyping(callback);
+        }
+
+        public void StopTyping()
+        {
+            input.StopTyping();
         }
 
         public void Clear()
@@ -140,7 +154,7 @@ namespace cylib
             updaters.Clear();
 
             e_pointerChange.Clear();
-            e_focusChange.Clear();
+            //e_focusChange.Clear();
             e_axisMove.Clear();
             e_triggerMove.Clear();
             e_keyChange.Clear();
@@ -256,7 +270,8 @@ namespace cylib
         {
             e_Action.removeElement(e);
         }
-
+        
+        /*
         public void addEventHandler(int priority, OnFocusChange e)
         {
             e_focusChange.addElement(priority, e);
@@ -271,6 +286,7 @@ namespace cylib
         {
             e_focusChange.removeElement(e);
         }
+        */
 
         public void addEventHandler(int priority, OnAxisMove e)
         {

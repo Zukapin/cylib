@@ -168,6 +168,8 @@ namespace cylib
             }
         }
 
+        public Window window { get; }
+
         public static class DefaultAssets
         {
             public const string VB_QUAD_POS_TEX_UNIT = "VB_QUAD_POS_TEX_UNIT";
@@ -208,6 +210,7 @@ namespace cylib
 
         public Renderer(Window window)
         {
+            this.window = window;
             {
 #if WINDOWS
                 //This only works on windows -- the SysWMInfo will exist, but 'info.win.window' is a windows-only pointer to the window handle
@@ -380,6 +383,12 @@ namespace cylib
                 myBlendAlphaTest = new BlendState(Device, desc);
             }
             #endregion
+        }
+
+        public void Dispose()
+        {//I dont actually know what this needs to do
+            context.Dispose();
+            device.Dispose();
         }
     }
 }

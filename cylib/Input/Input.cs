@@ -4,9 +4,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 using SDL2;
+using Scancode = SDL2.SDL.SDL_Scancode;
 using Keys = SDL2.SDL.SDL_Keycode;
 
 using log;
+using System.Runtime.InteropServices;
 
 namespace cylib
 {
@@ -16,6 +18,7 @@ namespace cylib
     public delegate bool OnTriggerMove(Trigger trig, float val);
     public delegate bool OnKeyChange(KeyData data, bool isDown);
     public delegate bool OnAction(ActionEventArgs args);
+    public delegate void OnTextInput(string text);
 
     /// <summary>
     /// Anything that interfaces with human input should have a priority.
@@ -83,13 +86,15 @@ namespace cylib
 
     public struct KeyData
     {
+        public readonly Scancode s;
         public readonly Keys k;
         public readonly bool shift;
         public readonly bool ctrl;
         public readonly bool alt;
 
-        public KeyData(Keys k, bool shift, bool ctrl, bool alt)
+        public KeyData(Scancode s, Keys k, bool shift, bool ctrl, bool alt)
         {
+            this.s = s;
             this.k = k;
             this.shift = shift;
             this.ctrl = ctrl;
@@ -163,32 +168,48 @@ namespace cylib
     /// </summary>
     public class InputHandler
     {
+        GameStage stage;
         ActionMapper map;
         public EventManager events; //should be set by stage during constructor, then updated however
 
-        public InputHandler()
+        private OnTextInput activeTextbox;
+
+        public InputHandler(GameStage stage)
         {
+            this.stage = stage;
             map = new ActionMapper(this, "Content/binds.cyb");
         }
 
         public void EnterFPVMode()
         {
-
+            SDL.SDL_SetRelativeMouseMode(SDL.SDL_bool.SDL_TRUE);
         }
 
         public void LeaveFPVMode()
         {
-
+            SDL.SDL_SetRelativeMouseMode(SDL.SDL_bool.SDL_FALSE);
         }
 
         public void ConstrainMouseToWindow()
         {
-
+            SDL.SDL_SetWindowGrab(stage.renderer.window.Handle, SDL.SDL_bool.SDL_TRUE);
         }
 
         public void StopConstrainingMouseToWindow()
         {
+            SDL.SDL_SetWindowGrab(stage.renderer.window.Handle, SDL.SDL_bool.SDL_FALSE);
+        }
 
+        internal void StartTyping(OnTextInput callback)
+        {
+            activeTextbox = callback;
+            SDL.SDL_StartTextInput();
+        }
+
+        internal void StopTyping()
+        {
+            activeTextbox = null;
+            SDL.SDL_StopTextInput();
         }
 
         public void Update()
@@ -198,10 +219,16 @@ namespace cylib
                 switch (ev.type)
                 {
                     case SDL.SDL_EventType.SDL_KEYDOWN:
-                        onKeyChange(ev.key.keysym.sym, true, false, false, false);
+                        onKeyChange(ev.key.keysym.scancode, ev.key.keysym.sym, true, 
+                            (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_SHIFT) != 0,
+                            (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_CTRL) != 0,
+                            (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_ALT) != 0);
                         break;
                     case SDL.SDL_EventType.SDL_KEYUP:
-                        onKeyChange(ev.key.keysym.sym, false, false, false, false);
+                        onKeyChange(ev.key.keysym.scancode, ev.key.keysym.sym, false,
+                            (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_SHIFT) != 0,
+                            (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_CTRL) != 0,
+                            (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_ALT) != 0);
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEMOTION:
                         onPointerMovement(ev.motion.x, ev.motion.y, true);
@@ -212,6 +239,36 @@ namespace cylib
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                         onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true);
                         break;
+                    case SDL.SDL_EventType.SDL_QUIT:
+                        stage.Exit();
+                        break;
+                    case SDL.SDL_EventType.SDL_WINDOWEVENT:
+                        switch (ev.window.windowEvent)
+                        {
+                            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
+                                break;
+                            default:
+                                Logger.WriteLine(LogType.DEBUG, "Missing handling for window event: " + ev.window.windowEvent);
+                                break;
+                        }
+                        break;
+                    case SDL.SDL_EventType.SDL_TEXTINPUT:
+                        unsafe
+                        {
+                            var text = StringFromNativeUtf8(ev.text.text);
+                            if (activeTextbox != null)
+                                activeTextbox(text);
+                            else
+                                Logger.WriteLine(LogType.DEBUG, "TextInput event while our textbox callback is null? " + text);
+                        }
+                        break;
+                    case SDL.SDL_EventType.SDL_TEXTEDITING:
+                        unsafe
+                        {
+                            var text = StringFromNativeUtf8(ev.edit.text);
+                            Logger.WriteLine(LogType.DEBUG, "Got text edit input: " + text + " " + ev.edit.start + " " + ev.edit.length);
+                        }
+                        break;
                     default:
                         Logger.WriteLine(LogType.DEBUG, "Missing handling for event: " + ev.type);
                         break;
@@ -219,6 +276,16 @@ namespace cylib
             }
         }
 
+        private static unsafe string StringFromNativeUtf8(byte* nativeUtf8)
+        {
+            int len = 0;
+            while (nativeUtf8[len] != 0) ++len;
+            byte[] buffer = new byte[len];
+            Marshal.Copy((IntPtr)nativeUtf8, buffer, 0, buffer.Length);
+            return Encoding.UTF8.GetString(buffer);
+        }
+
+        /*
         private void onLostFocus(object sender, EventArgs e)
         {
             Logger.WriteLine(LogType.VERBOSE, "Form lost focus...");
@@ -240,8 +307,9 @@ namespace cylib
                     return;
             }
         }
+        */
 
-        public void onPointerMovement(int posX, int posY, bool focus)
+        private void onPointerMovement(int posX, int posY, bool focus)
         {
             PointerEventArgs args = new PointerEventArgs(PointerEventType.MOVE, posX, posY, PointerButton.NONE, false, 0, 0, 0, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
@@ -251,7 +319,7 @@ namespace cylib
             }
         }
 
-        public void onPointerMousewheel(int posX, int posY, int delta, bool focus)
+        private void onPointerMousewheel(int posX, int posY, int delta, bool focus)
         {
             PointerEventArgs args = new PointerEventArgs(PointerEventType.MOUSEWHEEL, posX, posY, PointerButton.NONE, false, delta, 0, 0, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
@@ -261,7 +329,7 @@ namespace cylib
             }
         }
 
-        public void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus)
+        private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus)
         {
             PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, 0, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
@@ -271,7 +339,7 @@ namespace cylib
             }
         }
 
-        public void onPointerAim(float dX, float dY, bool focus)
+        private void onPointerAim(float dX, float dY, bool focus)
         {
             PointerEventArgs args = new PointerEventArgs(PointerEventType.AIM, 0, 0, PointerButton.NONE, false, 0, dX, dY, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
@@ -281,9 +349,9 @@ namespace cylib
             }
         }
 
-        public void onKeyChange(Keys k, bool isDown, bool shift, bool ctrl, bool alt)
+        private void onKeyChange(Scancode s, Keys k, bool isDown, bool shift, bool ctrl, bool alt)
         {
-            KeyData key = new KeyData(k, shift, ctrl, alt);
+            KeyData key = new KeyData(s, k, shift, ctrl, alt);
 
             ActionEventArgs action;
             bool hasAction = map.tryGetAction(key, isDown, out action);
@@ -316,10 +384,11 @@ namespace cylib
             }
         }
 
-        public void onBindingChange(Keys k, KeyMap keyData, bool isBound)
+        internal void onBindingChange(Scancode k, KeyMap keyData, bool isBound)
         {
             //if the action was fired but not released, might want to call the release event
             //... can that even happen?
+            //otherwise I'm not sure why this exists
             if (isBound)
             {
                 Logger.WriteLine(LogType.DEBUG, "Key binding added. Bind: " + keyData.getDisplay(k) + " Action: " + keyData.action);

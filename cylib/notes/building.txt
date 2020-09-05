@@ -2,9 +2,18 @@
 update dx bindings to https://github.com/orgs/terrafx/packages
 update bepuphus to v2
 
+TODO: 
+	- Upgrade font support
+		- Add additional unicode points https://blog.hypersect.com/improving-the-font-pipeline/
+		- Need to upgrade the sdf rendering, can use multiple channels and probably get the anti-aliasing a little Less Dumb (Could stack fonts in different channels for extra terrible)
+
 
 Building using this library:
-If you're starting a new project, the easiest way is to copy the CoreTest project, then adjust the paths in the .csproj file.
+If you're starting a new project, the easiest way is to use the CoreTest project as a base.
+	- Clone the cylib, coretest, bepuphysics2, and sdl repos.
+	- Copy the SDL2 dlls from the cylib project into the SDL2 project folder -- add them to the csproj file with copy to output directory enabled. (I should probably just have the DLLS setup in cylib)
+	- It should build then?
+
 For moving an existing project, or debugging build problems:
 	- Your .csproj file will need something like:
 		  <ItemGroup>

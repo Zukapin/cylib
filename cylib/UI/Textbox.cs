@@ -5,148 +5,6 @@ using System.Drawing;
 
 namespace cylib
 {
-    /// <summary>
-    /// Used in textbox class to map from a keycode to a set of render-supported characters.
-    /// Probably doesn't work on non-US keyboards.
-    /// </summary>
-    public static class KeyToCharMapper
-    {
-        public static string supportedChars = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[];',./\\~!@#$%^&*()_+{}:\"<>?|";
-        public static char getChar(Keys key, bool isShiftDown)
-        {
-            if ((int)key > 96 && (int)key < 123)
-            {
-                if (isShiftDown)
-                    return (char)(key - 32);
-                else
-                    return (char)(key);
-            }
-
-            switch (key)
-            {
-                case Keys.SDLK_SPACE:
-                    return ' ';
-                case Keys.SDLK_KP_0:
-                    return '0';
-                case Keys.SDLK_KP_1:
-                    return '1';
-                case Keys.SDLK_KP_2:
-                    return '2';
-                case Keys.SDLK_KP_3:
-                    return '3';
-                case Keys.SDLK_KP_4:
-                    return '4';
-                case Keys.SDLK_KP_5:
-                    return '5';
-                case Keys.SDLK_KP_6:
-                    return '6';
-                case Keys.SDLK_KP_7:
-                    return '7';
-                case Keys.SDLK_KP_8:
-                    return '8';
-                case Keys.SDLK_KP_9:
-                    return '9';
-                case Keys.SDLK_KP_MULTIPLY:
-                    return '*';
-                case Keys.SDLK_KP_DIVIDE:
-                    return '/';
-                case Keys.SDLK_KP_PLUS:
-                    return '+';
-                case Keys.SDLK_KP_MINUS:
-                    return '-';
-                case Keys.SDLK_KP_DECIMAL:
-                    return '.';
-                case Keys.SDLK_1:
-                    if (isShiftDown)
-                        return '!';
-                    return '1';
-                case Keys.SDLK_2:
-                    if (isShiftDown)
-                        return '@';
-                    return '2';
-                case Keys.SDLK_3:
-                    if (isShiftDown)
-                        return '#';
-                    return '3';
-                case Keys.SDLK_4:
-                    if (isShiftDown)
-                        return '$';
-                    return '4';
-                case Keys.SDLK_5:
-                    if (isShiftDown)
-                        return '%';
-                    return '5';
-                case Keys.SDLK_6:
-                    if (isShiftDown)
-                        return '^';
-                    return '6';
-                case Keys.SDLK_7:
-                    if (isShiftDown)
-                        return '&';
-                    return '7';
-                case Keys.SDLK_8:
-                    if (isShiftDown)
-                        return '*';
-                    return '8';
-                case Keys.SDLK_9:
-                    if (isShiftDown)
-                        return '(';
-                    return '9';
-                case Keys.SDLK_0:
-                    if (isShiftDown)
-                        return ')';
-                    return '0';
-                case Keys.SDLK_MINUS:
-                    if (isShiftDown)
-                        return '_';
-                    return '-';
-                case Keys.SDLK_PLUS:
-                    if (isShiftDown)
-                        return '+';
-                    return '=';
-                case Keys.SDLK_LEFTBRACKET:
-                    if (isShiftDown)
-                        return '{';
-                    return '[';
-                case Keys.SDLK_RIGHTBRACKET:
-                    if (isShiftDown)
-                        return '}';
-                    return ']';
-                case Keys.SDLK_SEMICOLON:
-                    if (isShiftDown)
-                        return ':';
-                    return ';';
-                case Keys.SDLK_QUOTE:
-                    if (isShiftDown)
-                        return '|';
-                    return '\'';
-                case Keys.SDLK_COMMA:
-                    if (isShiftDown)
-                        return '<';
-                    return ',';
-                case Keys.SDLK_KP_PERIOD:
-                    if (isShiftDown)
-                        return '>';
-                    return '.';
-                case Keys.SDLK_SLASH:
-                    if (isShiftDown)
-                        return '?';
-                    return '/';
-                case Keys.SDLK_BACKSLASH:
-                    if (isShiftDown)
-                        return '|';
-                    return '\\';
-                case Keys.SDLK_BACKQUOTE:
-                    if (isShiftDown)
-                        return '~';
-                    return '`';
-                default:
-                    //Logger.WriteLine(LogType.DEBUG, "Missing char case: " + key);
-                    return (char)0;
-            }
-        }
-    }
-
     public delegate void TextboxEnter();
 
     /// <summary>
@@ -237,11 +95,13 @@ namespace cylib
                 {
                     bg.mainColor = activeColor;
                     em.addEventHandler((int)InterfacePriority.HIGHEST, onKeyChange);
+                    em.StartTyping(OnText);
                 }
                 else
                 {
                     bg.mainColor = bgColor;
                     em.removeEventHandler(onKeyChange);
+                    em.StopTyping();
                 }
             }
         }
@@ -411,13 +271,17 @@ namespace cylib
         {
             if (isDown && isTyping)
             {
-                if (key.k == Keys.SDLK_BACKSPACE)
+                //we translate the given scankode to the keycode
+                //scancodes are physical keys, keycodes are virtual -- if the user has a keyboard mode for a different language with a different layout
+                //the 'virtual' keys are used for typing
+                var k = key.k;
+                if (k == Keys.SDLK_BACKSPACE)
                 {
                     DoBackspace();
                     return true;
                 }
 
-                if (key.k == Keys.SDLK_DELETE || (key.k == Keys.SDLK_KP_DECIMAL && key.shift))
+                if (k == Keys.SDLK_DELETE || (k == Keys.SDLK_KP_DECIMAL && key.shift))
                 {
                     if (selPosition == text.Length && selDist == 0)
                         return true;
@@ -439,7 +303,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.k == Keys.SDLK_LEFT)
+                if (k == Keys.SDLK_LEFT)
                 {
                     if (key.shift)
                     {//we're now editting the selection box
@@ -495,7 +359,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.k == Keys.SDLK_RIGHT)
+                if (k == Keys.SDLK_RIGHT)
                 {
                     if (key.shift)
                     {//editting the selection box
@@ -552,7 +416,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.k == Keys.SDLK_UP || key.k == Keys.SDLK_HOME)
+                if (k == Keys.SDLK_UP || k == Keys.SDLK_HOME)
                 {//jump to the beginning
                     if (key.shift)
                     {//select to the beginning
@@ -567,7 +431,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.k == Keys.SDLK_DOWN || key.k == Keys.SDLK_END)
+                if (k == Keys.SDLK_DOWN || k == Keys.SDLK_END)
                 {//jump to the end
                     if (key.shift)
                     {//select to the end
@@ -582,7 +446,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.ctrl && key.k == Keys.SDLK_a)
+                if (key.ctrl && k == Keys.SDLK_a)
                 {//select all
                     selPosition = 0;
                     selDist = text.Length;
@@ -590,7 +454,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.ctrl && key.k == Keys.SDLK_x)
+                if (key.ctrl && k == Keys.SDLK_x)
                 {//cut
                     if (selDist == 0)
                         return true;
@@ -603,7 +467,7 @@ namespace cylib
                     return true;
                 }
 
-                if (key.ctrl && key.k == Keys.SDLK_c)
+                if (key.ctrl && k == Keys.SDLK_c)
                 {//copy
                     if (selDist == 0)
                         return true;
@@ -615,22 +479,17 @@ namespace cylib
                     return true;
                 }
 
-                if (key.ctrl && key.k == Keys.SDLK_v)
+                if (key.ctrl && k == Keys.SDLK_v)
                 {//paste
                     if (SDL2.SDL.SDL_HasClipboardText() == SDL2.SDL.SDL_bool.SDL_FALSE)
                         return true;
 
                     string toAdd = SDL2.SDL.SDL_GetClipboardText();
-
-                    for (int i = 0; i < toAdd.Length; i++)
-                    {
-                        if (KeyToCharMapper.supportedChars.Contains(toAdd[i]))
-                            addChar(toAdd[i]);
-                    }
+                    OnText(toAdd);
                     return true;
                 }
 
-                if (key.k == Keys.SDLK_RETURN || key.k == Keys.SDLK_KP_ENTER || key.k == Keys.SDLK_RETURN2)
+                if (k == Keys.SDLK_RETURN || k == Keys.SDLK_KP_ENTER || k == Keys.SDLK_RETURN2)
                 {//enter, fire event
                     selDist = 0;
 
@@ -639,15 +498,28 @@ namespace cylib
 
                     return true;
                 }
-
-                char c = KeyToCharMapper.getChar(key.k, key.shift);
-                if (c != 0)
-                {//add char
-                    addChar(c);
-                    return true;
-                }
             }
             return false;
+        }
+
+        void OnText(string toAdd)
+        {
+            //so this text can be dirty -- unicode characters we don't support or whatever. trusting in C#'s string implementation to... deal with it
+            if (selDist != 0)
+            {
+                //save the old selection, and edit it first, because it can get changed on the text set
+                //we could bypass the auto-stuff on the text, but, whatever
+                var oldSelPos = selPosition; 
+                var oldSelDist = selDist;
+                selPosition = Math.Min(selPosition, selPosition + selDist);
+                selDist = 0;
+                text = text.Remove(Math.Min(oldSelPos, oldSelPos + oldSelDist), Math.Abs(oldSelDist));
+            }
+
+            text = text.Insert(selPosition, toAdd);
+            selPosition++;
+
+            calcCursorPosition();
         }
 
         private void DoBackspace()
@@ -667,21 +539,6 @@ namespace cylib
                 selPosition = Math.Min(selPosition, selPosition + selDist);
                 selDist = 0;
             }
-
-            calcCursorPosition();
-        }
-
-        private void addChar(char c)
-        {
-            if (selDist != 0)
-            {
-                text = text.Remove(Math.Min(selPosition, selPosition + selDist), Math.Abs(selDist));
-                selPosition = Math.Min(selPosition, selPosition + selDist);
-                selDist = 0;
-            }
-
-            text = text.Insert(selPosition, c.ToString());
-            selPosition++;
 
             calcCursorPosition();
         }
