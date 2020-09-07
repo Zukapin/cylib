@@ -91,7 +91,6 @@ namespace cylib
 
         public ICamera cam;
 
-        public readonly Settings settings;
         InputHandler input;
 
         IScene currentScene;
@@ -102,12 +101,11 @@ namespace cylib
         public readonly Renderer renderer;
         RenderTargetView renderView;
 
-        public GameStage(Renderer renderer, Settings settings)
+        public GameStage(Renderer renderer, string actionFile)
         {
-            this.settings = settings;
             this.renderer = renderer;
 
-            input = new InputHandler(this);
+            input = new InputHandler(this, actionFile);
 
             loadManager = new EventManager(input);
             sceneManager = new EventManager(input);
@@ -124,8 +122,8 @@ namespace cylib
             {
                 Format = Format.R32_Typeless,
                 BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                Width = settings.resWidth,
-                Height = settings.resHeight,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
                 MipLevels = 1,
                 ArraySize = 1,
                 CpuAccessFlags = CpuAccessFlags.None,
@@ -154,8 +152,8 @@ namespace cylib
             {
                 Format = Format.R8G8B8A8_UNorm_SRgb,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-                Width = settings.resWidth,
-                Height = settings.resHeight,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
                 MipLevels = 1,
                 ArraySize = 1,
                 CpuAccessFlags = CpuAccessFlags.None,
@@ -172,8 +170,8 @@ namespace cylib
             {
                 Format = Format.R16G16_Float,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-                Width = settings.resWidth,
-                Height = settings.resHeight,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
                 MipLevels = 1,
                 ArraySize = 1,
                 CpuAccessFlags = CpuAccessFlags.None,
@@ -190,8 +188,8 @@ namespace cylib
             {
                 Format = Format.R8G8B8A8_UNorm_SRgb,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-                Width = settings.resWidth,
-                Height = settings.resHeight,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
                 MipLevels = 1,
                 ArraySize = 1,
                 CpuAccessFlags = CpuAccessFlags.None,
@@ -215,7 +213,7 @@ namespace cylib
 
                 CameraBuffer fs = new CameraBuffer();
                 fs.viewMatrix = Matrix.Identity;
-                Matrix.CreateOrthographic(0.0f, settings.resWidth, settings.resHeight, 0.0f, 0.0f, 1.0f, out fs.projMatrix);
+                Matrix.CreateOrthographic(0.0f, renderer.ResolutionWidth, renderer.ResolutionHeight, 0.0f, 0.0f, 1.0f, out fs.projMatrix);
 
                 updateSubresource(fullscreenCameraBuffer, fs);
             }
@@ -421,7 +419,7 @@ namespace cylib
             renderer.Context.ClearRenderTargetView(renderView, new SharpDX.Mathematics.Interop.RawColor4());
             renderer.Context.ClearDepthStencilView(depthDSV, DepthStencilClearFlags.Depth, 0.0f, 0);
 
-            renderer.Context.Rasterizer.SetViewport(0, 0, settings.resWidth, settings.resHeight);
+            renderer.Context.Rasterizer.SetViewport(0, 0, renderer.ResolutionWidth, renderer.ResolutionHeight);
             renderer.Context.OutputMerger.SetDepthStencilState(stencilDefault);
             renderer.Context.OutputMerger.SetTargets(depthDSV, colorRTV, normalRTV);
             renderer.Context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
@@ -456,7 +454,7 @@ namespace cylib
                 renderer.Context.OutputMerger.SetBlendState(renderer.blendLight, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
                 renderer.Context.InputAssembler.SetVertexBuffers(0, quad_postex_unit.vbBinding);
 
-                Matrix3x3.CreateScale(new Vector3(settings.resWidth, settings.resHeight, 1), out Matrix3x3 scaleMat);
+                Matrix3x3.CreateScale(new Vector3(renderer.ResolutionWidth, renderer.ResolutionHeight, 1), out Matrix3x3 scaleMat);
                 Matrix.CreateRigid(scaleMat, Vector3.Zero, out worldBuffer.dat[0]);
                 worldBuffer.Write(renderer.Context);
                 renderer.Context.VertexShader.SetConstantBuffer(1, worldBuffer.buf);
@@ -499,7 +497,7 @@ namespace cylib
             //End 2D
             renderer.Context.OutputMerger.SetBlendState(null, null, -1);
 
-            renderer.SwapChain.Present(settings.vSync ? 1 : 0, PresentFlags.None);
+            renderer.SwapChain.Present(renderer.VSync ? 1 : 0, PresentFlags.None);
         }
 
         void drawMRT()
@@ -548,25 +546,25 @@ namespace cylib
             renderer.Context.InputAssembler.SetVertexBuffers(0, quad_postex_unit.vbBinding);
             renderer.Context.VertexShader.SetConstantBuffer(1, worldBuffer.buf);
 
-            Matrix3x3.CreateScale(new Vector3(settings.resWidth / 4f, settings.resHeight / 4f, 1), out Matrix3x3 scaleMat);
+            Matrix3x3.CreateScale(new Vector3(renderer.ResolutionWidth / 4f, renderer.ResolutionHeight / 4f, 1), out Matrix3x3 scaleMat);
 
             s_ColorDebug.Bind(renderer.Context);
-            Matrix.CreateRigid(scaleMat, new Vector3(0, settings.resHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
+            Matrix.CreateRigid(scaleMat, new Vector3(0, renderer.ResolutionHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
             worldBuffer.Write(renderer.Context);
             renderer.Context.Draw(6, 0);
 
             s_DepthDebug.Bind(renderer.Context);
-            Matrix.CreateRigid(scaleMat, new Vector3(settings.resWidth / 4f, settings.resHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
+            Matrix.CreateRigid(scaleMat, new Vector3(renderer.ResolutionWidth / 4f, renderer.ResolutionHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
             worldBuffer.Write(renderer.Context);
             renderer.Context.Draw(6, 0);
 
             s_NormalDebug.Bind(renderer.Context);
-            Matrix.CreateRigid(scaleMat, new Vector3(settings.resWidth / 2f, settings.resHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
+            Matrix.CreateRigid(scaleMat, new Vector3(renderer.ResolutionWidth / 2f, renderer.ResolutionHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
             worldBuffer.Write(renderer.Context);
             renderer.Context.Draw(6, 0);
 
             s_LightDebug.Bind(renderer.Context);
-            Matrix.CreateRigid(scaleMat, new Vector3(settings.resWidth * 3f / 4f, settings.resHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
+            Matrix.CreateRigid(scaleMat, new Vector3(renderer.ResolutionWidth * 3f / 4f, renderer.ResolutionHeight * 3f / 4f, 0), out worldBuffer.dat[0]);
             worldBuffer.Write(renderer.Context);
             renderer.Context.Draw(6, 0);
 

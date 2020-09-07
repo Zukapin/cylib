@@ -152,8 +152,28 @@ namespace cylib
             }
         }
 
+        public IEnumerator<(int priority, T val)> GetEnumeratorWithPriority()
+        {//useful if you want to check this with, like a single other action without inserting crap
+            foreach (var b in listSet)
+            {
+                int p = b.Key;
+                foreach (var t in b.Value)
+                {
+                    yield return (p, t);
+                }
+            }
+        }
+
         public IEnumerable<Pair<T, V>> Union<V>(PriorityList<V> otherList)
         {
+            if (otherList == null)
+            {
+                foreach (T t in this)
+                {
+                    yield return new Pair<T, V>(t);
+                }
+                yield break;
+            }
             var keyEnum = listSet.GetEnumerator();
             var actionEnum = otherList.listSet.GetEnumerator();
 

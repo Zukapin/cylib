@@ -174,20 +174,28 @@ namespace cylib
 
         private OnTextInput activeTextbox;
 
-        public InputHandler(GameStage stage)
+        public InputHandler(GameStage stage, string actionFile)
         {
             this.stage = stage;
-            map = new ActionMapper(this, "Content/binds.cyb");
+            map = new ActionMapper(this, actionFile);
+            SDL.SDL_StopTextInput(); //for some reason sdl defaults text input to on
         }
 
+        int prevMouseX, prevMouseY;
         public void EnterFPVMode()
         {
+            if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_TRUE)
+                return;
+            SDL.SDL_GetMouseState(out prevMouseX, out prevMouseY);
             SDL.SDL_SetRelativeMouseMode(SDL.SDL_bool.SDL_TRUE);
         }
 
         public void LeaveFPVMode()
         {
+            if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
+                return;
             SDL.SDL_SetRelativeMouseMode(SDL.SDL_bool.SDL_FALSE);
+            SDL.SDL_WarpMouseInWindow(stage.renderer.window.Handle, prevMouseX, prevMouseY);
         }
 
         public void ConstrainMouseToWindow()
@@ -231,7 +239,10 @@ namespace cylib
                             (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_ALT) != 0);
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEMOTION:
-                        onPointerMovement(ev.motion.x, ev.motion.y, true);
+                        if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
+                            onPointerMovement(ev.motion.x, ev.motion.y, true);
+                        else
+                            onPointerAim(ev.motion.xrel / (float)stage.renderer.ResolutionWidth, ev.motion.yrel / (float)stage.renderer.ResolutionHeight, true);
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
                         onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true);
@@ -354,7 +365,7 @@ namespace cylib
             KeyData key = new KeyData(s, k, shift, ctrl, alt);
 
             ActionEventArgs action;
-            bool hasAction = map.tryGetAction(key, isDown, out action);
+            bool hasAction = map.TryGetAction(key, isDown, out action);
 
             if (!hasAction)
             {
@@ -368,7 +379,7 @@ namespace cylib
             }
             else
             {
-                foreach (Pair<OnKeyChange, OnAction> p in events.keyActionList)
+                foreach (Pair<OnKeyChange, OnAction> p in events.KeyActionList(action.action))
                 {
                     if (p.hasVal1)
                     {
@@ -391,11 +402,11 @@ namespace cylib
             //otherwise I'm not sure why this exists
             if (isBound)
             {
-                Logger.WriteLine(LogType.DEBUG, "Key binding added. Bind: " + keyData.getDisplay(k) + " Action: " + keyData.action);
+                Logger.WriteLine(LogType.DEBUG, "Key binding added. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.ActionName);
             }
             else
             {
-                Logger.WriteLine(LogType.DEBUG, "Key binding removed. Bind: " + keyData.getDisplay(k) + " Action: " + keyData.action);
+                Logger.WriteLine(LogType.DEBUG, "Key binding removed. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.ActionName);
             }
         }
     }

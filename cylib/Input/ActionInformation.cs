@@ -13,14 +13,6 @@ using log;
 
 namespace cylib
 {
-    /// <summary>
-    /// Every ActionType should then have the properties we care about added to the Action class. (If it's a button/axis/trigger action, etc)
-    /// </summary>
-    public enum ActionType
-    {
-        ESCAPE,
-    }
-
     public enum FiredBy
     {
         BUTTON,
@@ -31,7 +23,7 @@ namespace cylib
     #region Action Event Args
     public struct ActionEventArgs
     {
-        public readonly ActionType action;
+        public readonly string action;
         public readonly FiredBy cause;
 
         public readonly bool buttonDown; //button actions fire on both down and up
@@ -40,7 +32,7 @@ namespace cylib
 
         public readonly static ActionEventArgs None = new ActionEventArgs();
 
-        public ActionEventArgs(ActionType action, FiredBy cause, bool buttonDown, float axisVal, float triggerVal)
+        public ActionEventArgs(string action, FiredBy cause, bool buttonDown, float axisVal, float triggerVal)
         {
             this.action = action;
             this.cause = cause;
@@ -51,86 +43,42 @@ namespace cylib
     }
     #endregion
 
-    static class Action
-    { //support, 'button', 'axis', 'trigger' event types
-        #region Button Support
-        /// <summary>
-        /// This should return true if the action can be bound to a button.
-        /// </summary>
-        public static bool ActionSupportsButton(ActionType type)
+    public class ActionInformation
+    {
+        //the underlying 'action' support information -- does not have keybind information, just what type of keybinds it *could* support
+        public string Name { get; }
+        internal bool SupportsButton { get; }
+        internal bool SupportsAxis { get; }
+        internal bool SupportsTrigger { get; }
+        internal bool CaresAboutModifiers { get; }
+
+        public ActionInformation(string name, bool supportsButton, bool supportsAxis, bool supportsTrigger, bool caresAboutModifiers)
         {
-            switch (type)
-            {
-                case ActionType.ESCAPE:
-                    return true;
-            }
-
-            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find if an action supports buttons: " + type);
-            return false;
+            this.Name = name;
+            this.SupportsButton = supportsButton;
+            this.SupportsAxis = supportsAxis;
+            this.SupportsTrigger = supportsTrigger;
+            this.CaresAboutModifiers = caresAboutModifiers;
         }
-        #endregion
-
-        #region Axis Support
-        /// <summary>
-        /// This should return true if the action can be bound to an axis.
-        /// </summary>
-        public static bool ActionSupportsAxis(ActionType type)
-        {
-            return false;
-        }
-        #endregion
-
-        #region Trigger Support
-        /// <summary>
-        /// This should return true if the action can be bound to a trigger.
-        /// </summary>
-        public static bool ActionSupportsTrigger(ActionType type)
-        {
-            return false;
-        }
-        #endregion
-
-        #region Cares About Modifiers
-        /// <summary>
-        /// This should return true if we want to use modifiers with this action, false if it should be the only action bound to a key.
-        /// 
-        /// For key binds, some actions may allow 'shift+Key' to be distinct from 'Key' alone.
-        /// Other actions may want any press of 'Key', regardless of modifiers, to always fire the action.
-        /// Compare 'W' in CS:GO, where it 'goes forward' regardless of shift/ctrl, to EVE where every key only fires on correct modifier combos.
-        /// 
-        /// Some keys can't have modifiers (mouse buttons), so this doesn't really affect those.
-        /// </summary>
-        public static bool ActionCaresAboutModifiers(ActionType type)
-        {
-            switch (type)
-            {
-                case ActionType.ESCAPE:
-                    return false;
-            }
-
-            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find if an action cares about modifiers: " + type);
-            return true;
-        }
-        #endregion
     }
 
     #region KeyMap
-    public class KeyMap
+    internal class KeyMap
     {
-        public readonly ActionType action;
-        public readonly bool caresAboutModifiers;
-        public readonly bool requiresShift;
-        public readonly bool requiresCtrl;
-        public readonly bool requiresAlt;
-        public bool isDown = false;
+        ActionInformation Action { get; }
+        internal bool CaresAboutModifiers { get { return Action.CaresAboutModifiers; } }
+        internal string ActionName { get { return Action.Name; } }
+        internal bool RequiresShift { get; }
+        internal bool RequiresCtrl { get; }
+        internal bool RequiresAlt { get; }
+        internal bool isDown = false;
 
-        public KeyMap(ActionType action, bool caresAboutModifiers, bool requiresShift, bool requiresCtrl, bool requiresAlt)
+        public KeyMap(ActionInformation action, bool requiresShift, bool requiresCtrl, bool requiresAlt)
         {
-            this.action = action;
-            this.caresAboutModifiers = caresAboutModifiers;
-            this.requiresShift = requiresShift;
-            this.requiresCtrl = requiresCtrl;
-            this.requiresAlt = requiresAlt;
+            this.Action = action;
+            this.RequiresShift = requiresShift;
+            this.RequiresCtrl = requiresCtrl;
+            this.RequiresAlt = requiresAlt;
         }
 
         public override bool Equals(object obj)
@@ -143,31 +91,21 @@ namespace cylib
 
         public override int GetHashCode()
         {
-            int toReturn = (int)action;
-            toReturn = 31 * toReturn + (caresAboutModifiers ? 10 : 3);
-
-            if (caresAboutModifiers)
-            {
-                toReturn = 31 * toReturn + (requiresShift ? 10 : 3);
-                toReturn = 31 * toReturn + (requiresCtrl ? 10 : 3);
-                toReturn = 31 * toReturn + (requiresAlt ? 10 : 3);
-            }
-
-            return toReturn;
+            return Action.Name.GetHashCode();
         }
 
         public bool Equals(KeyMap o)
         {
-            if (action != o.action)
+            //This isn't *only* the name because we can have multiple things bound to the same action.
+            //Like you can have jump bound to spacebar and mouse4, or something.
+
+            if (Action.Name != o.Action.Name)
                 return false;
 
-            if (caresAboutModifiers != o.caresAboutModifiers)
-                return false;
-
-            if (!caresAboutModifiers)
+            if (!CaresAboutModifiers)
                 return true;
 
-            return requiresShift == o.requiresShift && requiresCtrl == o.requiresCtrl && requiresAlt == o.requiresAlt;
+            return RequiresShift == o.RequiresShift && RequiresCtrl == o.RequiresCtrl && RequiresAlt == o.RequiresAlt;
         }
 
         public static bool operator ==(KeyMap a, KeyMap b)
@@ -180,16 +118,16 @@ namespace cylib
             return !a.Equals(b);
         }
 
-        public string getDisplay(Scancode s)
+        public string GetBindDisplay(Scancode s)
         {
             string toReturn = s.ToString();
-            if (!caresAboutModifiers)
+            if (!CaresAboutModifiers)
                 return toReturn;
-            if (requiresShift)
+            if (RequiresShift)
                 toReturn += "+SHIFT";
-            if (requiresCtrl)
+            if (RequiresCtrl)
                 toReturn += "+CTRL";
-            if (requiresAlt)
+            if (RequiresAlt)
                 toReturn += "+ALT";
             return toReturn;
         }
@@ -198,8 +136,9 @@ namespace cylib
 
     class ActionMapper
     {
-        InputHandler input;
-        Dictionary<Scancode, List<KeyMap>> keyToAction;
+        readonly InputHandler Input;
+        readonly Dictionary<Scancode, List<KeyMap>> KeyToAction;
+        readonly Dictionary<string, ActionInformation> NameToAction;
 
         /*
         Dictionary<ControllerButton, ActionType> controllerToAction;
@@ -209,9 +148,11 @@ namespace cylib
 
         public ActionMapper(InputHandler input, string path)
         {
-            this.input = input;
+            this.Input = input;
 
-            keyToAction = new Dictionary<Scancode, List<KeyMap>>();
+            NameToAction = new Dictionary<string, ActionInformation>();
+
+            KeyToAction = new Dictionary<Scancode, List<KeyMap>>();
             //controllerToAction = new Dictionary<ControllerButton, ActionType>();
             //axisToAction = new Dictionary<Axis, ActionType>();
             //triggerToAction = new Dictionary<Trigger, ActionType>();
@@ -220,11 +161,15 @@ namespace cylib
         }
 
         #region Key Get/Bind/Unbind
-        public bool tryGetAction(KeyData key, bool isDown, out ActionEventArgs args)
+        public bool TryGetAction(KeyData key, bool isDown, out ActionEventArgs args)
         {
-            List<KeyMap> m;
+            //general design for actions here --
+            //actions are unique to a KeyData request, based on the ScanCode, shift, ctrl, and alt
+            //we have a list of things per scancode because we *could* have multiple things bound to a button, but vary which action depending on modifiers
+            //each action response also keeps track of if we've fired the OnDown for that action, because we never want to fire OnUp without first firing OnDown
+            //this has the possibility of eating some action inputs when the user is tabbing in/out or something weird
 
-            if (!keyToAction.TryGetValue(key.s, out m))
+            if (!KeyToAction.TryGetValue(key.s, out var m))
             {
                 args = ActionEventArgs.None;
                 return false;
@@ -235,20 +180,28 @@ namespace cylib
                 KeyMap map = m[i];
 
                 if (isDown)
-                {//on key down, we're looking for an action that matches the requirements
-                    if (!map.caresAboutModifiers || ((map.requiresShift == key.shift) && (map.requiresCtrl == key.ctrl) && (map.requiresAlt == key.alt)))
+                {
+                    if (!map.CaresAboutModifiers || ((map.RequiresShift == key.shift) && (map.RequiresCtrl == key.ctrl) && (map.RequiresAlt == key.alt)))
                     {
-                        map.isDown = true;
-                        args = new ActionEventArgs(map.action, FiredBy.BUTTON, isDown, 0, 0);
-                        return true;
+                        if (!map.isDown)
+                        {
+                            map.isDown = true;
+                            args = new ActionEventArgs(map.ActionName, FiredBy.BUTTON, isDown, 0, 0);
+                            return true;
+                        }
                     }
                 }
                 else
-                {//on key up, we're looking for an action that has already fired the ondown event
+                {//for the onUp event, we specifically ignore if the modifiers still match
+                    //so if you do 'Wdown' 'shift' 'Wup' it still fires the same action as the Wdown did
+                    //for this reason, things like walking in cs-go should be handled by W and shift being different actions, rather than W = run-forward and W+shift = walk-forward
+                    //it *shouldnt* be possible for two actions here to *both* be down, without very specific tab-shenanigans
+                    //which would then be fixed by the player doing the action thats stuck down again -- it'd eat that input but fix it
+                    //could also be handled by the game directly with window focus events
                     if (map.isDown)
                     {
                         map.isDown = false;
-                        args = new ActionEventArgs(map.action, FiredBy.BUTTON, isDown, 0, 0);
+                        args = new ActionEventArgs(map.ActionName, FiredBy.BUTTON, isDown, 0, 0);
                         return true;
                     }
                 }
@@ -265,21 +218,21 @@ namespace cylib
         /// Ways this can fail:
         ///     1. Attempting to bind a key to an action that doesn't support keys.
         /// </summary>
-        public bool addKeyAction(Scancode s, bool shift, bool ctrl, bool alt, ActionType action)
+        bool AddKeyAction(Scancode s, bool shift, bool ctrl, bool alt, ActionInformation action)
         {
-            if (!Action.ActionSupportsButton(action))
+            if (!action.SupportsButton)
                 return false;
 
-            bool caresAboutMods = Action.ActionCaresAboutModifiers(action);
+            bool caresAboutMods = action.CaresAboutModifiers;
             List<KeyMap> m;
-            KeyMap map = new KeyMap(action, caresAboutMods, shift, ctrl, alt);
+            KeyMap map = new KeyMap(action, shift, ctrl, alt);
 
-            if (!keyToAction.TryGetValue(s, out m))
+            if (!KeyToAction.TryGetValue(s, out m))
             {
                 m = new List<KeyMap>();
                 m.Add(map);
-                keyToAction.Add(s, m);
-                input.onBindingChange(s, map, true);
+                KeyToAction.Add(s, m);
+                Input.onBindingChange(s, map, true);
                 return true;
             }
 
@@ -291,28 +244,30 @@ namespace cylib
             {//nothing else matters, just unbind all of the other keys here
                 while (m.Count != 0)
                 {
-                    unbindKey(s, m[0]);
+                    UnbindKey(s, m[0]);
                 }
 
                 m.Add(map);
-                input.onBindingChange(s, map, true);
+                Input.onBindingChange(s, map, true);
                 return true;
             }
 
-            if (m.Count == 1 && !m[0].caresAboutModifiers)
+            if (m.Count == 1 && !m[0].CaresAboutModifiers)
             {//the action already bound here doesn't care about modifiers, so we have to unbind it
-                unbindKey(s, m[0]);
+                //we're assuming we don't enter a state where there are more than one actions bound to this key, and one of them doesn't care about modifiers
+                //that would be an invalid state
+                UnbindKey(s, m[0]);
                 m.Add(map);
-                input.onBindingChange(s, map, true);
+                Input.onBindingChange(s, map, true);
                 return true;
             }
 
             //none of the actions ignore modifiers, so check for any exact conflicts
             for (int i = 0; i < m.Count; i++)
             {
-                if ((shift == m[i].requiresShift) && (ctrl == m[i].requiresCtrl) && (alt == m[i].requiresAlt))
+                if ((shift == m[i].RequiresShift) && (ctrl == m[i].RequiresCtrl) && (alt == m[i].RequiresAlt))
                 {//we found an exact conflict, so remove this key
-                    unbindKey(s, m[i]);
+                    UnbindKey(s, m[i]);
 
                     //there can't be two conflicts, so we're done here.
                     break;
@@ -321,15 +276,15 @@ namespace cylib
 
             //either we didn't find any conflicts, or we did and removed it
             m.Add(map);
-            input.onBindingChange(s, map, true);
+            Input.onBindingChange(s, map, true);
             return true;
         }
 
-        private void unbindKey(Scancode s, KeyMap m)
+        private void UnbindKey(Scancode s, KeyMap m)
         {
             List<KeyMap> list;
 
-            if (!keyToAction.TryGetValue(s, out list))
+            if (!KeyToAction.TryGetValue(s, out list))
             {
                 Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the key binding: " + s);
                 return;
@@ -340,7 +295,7 @@ namespace cylib
                 if (list[i] == m)
                 {
                     list.RemoveAt(i);
-                    input.onBindingChange(s, m, false);
+                    Input.onBindingChange(s, m, false);
                     return;
                 }
             }
@@ -354,11 +309,15 @@ namespace cylib
         {
             using (StreamWriter wr = new StreamWriter(new FileStream(path, FileMode.Create), Encoding.Unicode))
             {
-                foreach (var ent in keyToAction)
+                foreach (var a in NameToAction.Values)
+                {
+                    wr.WriteLine("A," + a.Name + "," + a.SupportsButton + "," + a.SupportsTrigger + "," + a.SupportsAxis + "," + a.CaresAboutModifiers);
+                }
+                foreach (var ent in KeyToAction)
                 {
                     foreach (var map in ent.Value)
                     {
-                        wr.WriteLine("K," + ent.Key.ToString() + "," + map.requiresShift + "," + map.requiresCtrl + "," + map.requiresAlt + "," + map.action.ToString());
+                        wr.WriteLine("K," + ent.Key.ToString() + "," + map.RequiresShift + "," + map.RequiresCtrl + "," + map.RequiresAlt + "," + map.ActionName);
                     }
                 }
             }
@@ -373,9 +332,9 @@ namespace cylib
                     string line = r.ReadLine();
                     string[] parts = line.Split(',');
 
-                    if (parts.Length == 0)
+                    if (parts.Length == 0 || parts.Length == 1)
                     {
-                        Logger.WriteLine(LogType.POSSIBLE_ERROR, "Bindings config has an empty line?");
+                        Logger.WriteLine(LogType.VERBOSE2, "Bindings config has an empty line: " + line);
                         continue;
                     }
 
@@ -384,7 +343,44 @@ namespace cylib
                         parts[i] = parts[i].Trim();
                     }
 
-                    if (parts[0] == "K")
+                    if (parts[0] == "A")
+                    {
+                        if (parts.Length != 6)
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Key binding config has incorrect number of parts: " + line);
+                            continue;
+                        }
+
+                        string action = parts[1];
+                        bool button, trigger, axis, mods;
+
+                        if (!bool.TryParse(parts[2], out button))
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read button supported value in action declaration: " + parts[2]);
+                            continue;
+                        }
+
+                        if (!bool.TryParse(parts[3], out trigger))
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read trigger supported value in action declaration: " + parts[3]);
+                            continue;
+                        }
+
+                        if (!bool.TryParse(parts[4], out axis))
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read axis supported value in action declaration: " + parts[4]);
+                            continue;
+                        }
+
+                        if (!bool.TryParse(parts[5], out mods))
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read mods supported value in action declaration: " + parts[5]);
+                            continue;
+                        }
+
+                        NameToAction.Add(action, new ActionInformation(action, button, axis, trigger, mods));
+                    }
+                    else if (parts[0] == "K")
                     {//key mapping
                         if (parts.Length != 6)
                         {
@@ -394,7 +390,6 @@ namespace cylib
 
                         Scancode s;
                         bool shift, ctrl, alt;
-                        ActionType action;
 
                         if (!Enum.TryParse(parts[1], out s))
                         {
@@ -420,13 +415,14 @@ namespace cylib
                             continue;
                         }
 
-                        if (!Enum.TryParse(parts[5], out action))
+                        string actionString = parts[5];
+                        if (!NameToAction.TryGetValue(actionString, out var action))
                         {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find action value in a key binding line: " + parts[5]);
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find action declaration for key binding: " + actionString);
                             continue;
                         }
 
-                        addKeyAction(s, shift, ctrl, alt, action);
+                        AddKeyAction(s, shift, ctrl, alt, action);
                     }
                     else
                     {
@@ -445,17 +441,17 @@ namespace cylib
         /// 
         /// Controller input should have analogous methdods -- call all of them that the action supports.
         /// </summary>
-        public List<KeyMap> getActionBinds(ActionType action)
+        public List<KeyMap> getActionBinds(string action)
         {
             List<KeyMap> toReturn = new List<KeyMap>();
 
             //We're just looping through the entire key map, as we don't have a reverse acceleration structure.
             //This should be fast enough, given we only expect to call this ~once per run.
-            foreach (var ent in keyToAction)
+            foreach (var ent in KeyToAction)
             {
                 foreach (var map in ent.Value)
                 {
-                    if (map.action == action)
+                    if (map.ActionName == action)
                     {
                         toReturn.Add(map);
                     }

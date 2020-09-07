@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -56,20 +57,14 @@ namespace cylib
             }
         }
 
-        private readonly PriorityList<OnAction> e_Action = new PriorityList<OnAction>();
-        public IEnumerable<OnAction> actionList
+        private readonly Dictionary<string, PriorityList<OnAction>> e_Action = new Dictionary<string, PriorityList<OnAction>>();
+        public IEnumerable<Pair<OnKeyChange, OnAction>> KeyActionList(string name)
         {
-            get
+            if (e_Action.TryGetValue(name, out var actionList))
             {
-                return e_Action;
+                return e_keyChange.Union(actionList);
             }
-        }
-        public IEnumerable<Pair<OnKeyChange, OnAction>> keyActionList
-        {
-            get
-            {
-                return e_keyChange.Union(e_Action);
-            }
+            return e_keyChange.Union<OnAction>(null);
         }
 
 
@@ -256,19 +251,35 @@ namespace cylib
             e_pointerChange.removeElement(e);
         }
 
-        public void addEventHandler(int priority, OnAction e)
+        public void addEventHandler(int priority, string action, OnAction e)
         {
-            e_Action.addElement(priority, e);
+            if (!e_Action.TryGetValue(action, out var pList))
+            {
+                pList = new PriorityList<OnAction>();
+            }
+
+            pList.addElement(priority, e);
+            e_Action.Add(action, pList);
         }
 
-        public void changePriority(int newPriority, OnAction e)
+        public void changePriority(int newPriority, string action, OnAction e)
         {
-            e_Action.changePriority(newPriority, e);
+            if (!e_Action.TryGetValue(action, out var pList))
+            {
+                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Attempting to change priority of an action not in the action list: " + action);
+            }
+
+            pList.changePriority(newPriority, e);
         }
 
-        public void removeEventHandler(OnAction e)
+        public void removeEventHandler(string action, OnAction e)
         {
-            e_Action.removeElement(e);
+            if (!e_Action.TryGetValue(action, out var pList))
+            {
+                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Attempting to remove handler of an action not in the action list: " + action);
+            }
+
+            pList.removeElement(e);
         }
         
         /*

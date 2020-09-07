@@ -31,7 +31,7 @@ namespace cylib
         {
             get
             {
-                return 0;
+                return resWidth;
             }
         }
 
@@ -40,9 +40,11 @@ namespace cylib
         {
             get
             {
-                return 0;
+                return resHeight;
             }
         }
+
+        public bool VSync { get; set; } = true;
 
         private readonly Device device;
         public Device Device
