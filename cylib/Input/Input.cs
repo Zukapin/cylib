@@ -227,7 +227,7 @@ namespace cylib
                 switch (ev.type)
                 {
                     case SDL.SDL_EventType.SDL_KEYDOWN:
-                        onKeyChange(ev.key.keysym.scancode, ev.key.keysym.sym, true, 
+                        onKeyChange(ev.key.keysym.scancode, ev.key.keysym.sym, true,
                             (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_SHIFT) != 0,
                             (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_CTRL) != 0,
                             (ev.key.keysym.mod & SDL.SDL_Keymod.KMOD_ALT) != 0);
@@ -245,10 +245,16 @@ namespace cylib
                             onPointerAim(ev.motion.xrel / (float)stage.renderer.ResolutionWidth, ev.motion.yrel / (float)stage.renderer.ResolutionHeight, true);
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
-                        onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true);
+                        if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, true);
+                        else
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, false);
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
-                        onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true);
+                        if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true, true);
+                        else
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true, false);
                         break;
                     case SDL.SDL_EventType.SDL_QUIT:
                         stage.Exit();
@@ -340,13 +346,51 @@ namespace cylib
             }
         }
 
-        private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus)
+        private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus, bool mouseVisible)
         {
             PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, 0, focus);
-            foreach (OnPointerChange e in events.pointerChangeList)
+            bool hasAction = map.TryGetAction(button, out var actionMap);
+            if (hasAction && actionMap.IsFired == isDown)
+                hasAction = false;
+
+            ActionEventArgs actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.MOUSE_BUTTON, isDown, posX, posY);
+            if (!hasAction && mouseVisible)
             {
-                if (e(args))
-                    return;
+                foreach (OnPointerChange e in events.pointerChangeList)
+                {
+                    if (e(args))
+                        return;
+                }
+            }
+            else if (hasAction && mouseVisible)
+            {
+                foreach (Pair<OnPointerChange, OnAction> p in events.PointerActionList(actionMap.Name))
+                {
+                    if (p.hasVal1)
+                    {
+                        if (p.val1(args))
+                            return;
+                    }
+                    else
+                    {
+                        if (p.val2(actionArgs))
+                        {
+                            actionMap.IsFired = isDown;
+                            return;
+                        }
+                    }
+                }
+            }
+            else if (hasAction && !mouseVisible)
+            {
+                foreach (var a in events.ActionList(actionMap.Name))
+                {
+                    if (a(actionArgs))
+                    {
+                        actionMap.IsFired = isDown;
+                        return;
+                    }
+                }
             }
         }
 
@@ -364,8 +408,9 @@ namespace cylib
         {
             KeyData key = new KeyData(s, k, shift, ctrl, alt);
 
-            ActionEventArgs action;
-            bool hasAction = map.TryGetAction(key, isDown, out action);
+            bool hasAction = map.TryGetAction(key, out var actionMap);
+            if (hasAction && actionMap.IsFired == isDown)
+                hasAction = false;
 
             if (!hasAction)
             {
@@ -379,7 +424,8 @@ namespace cylib
             }
             else
             {
-                foreach (Pair<OnKeyChange, OnAction> p in events.KeyActionList(action.action))
+                var actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.BUTTON, isDown, 0, 0);
+                foreach (Pair<OnKeyChange, OnAction> p in events.KeyActionList(actionMap.Name))
                 {
                     if (p.hasVal1)
                     {
@@ -388,8 +434,11 @@ namespace cylib
                     }
                     else
                     {
-                        if (p.val2(action))
+                        if (p.val2(actionArgs))
+                        {
+                            actionMap.IsFired = isDown;
                             return;
+                        }
                     }
                 }
             }
@@ -402,11 +451,23 @@ namespace cylib
             //otherwise I'm not sure why this exists
             if (isBound)
             {
-                Logger.WriteLine(LogType.DEBUG, "Key binding added. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.ActionName);
+                Logger.WriteLine(LogType.DEBUG, "Key binding added. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
             }
             else
             {
-                Logger.WriteLine(LogType.DEBUG, "Key binding removed. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.ActionName);
+                Logger.WriteLine(LogType.DEBUG, "Key binding removed. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
+            }
+        }
+
+        internal void onBindingChange(PointerButton k, PointerMap pointerData, bool isBound)
+        {
+            if (isBound)
+            {
+                Logger.WriteLine(LogType.DEBUG, "Pointer binding added. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
+            }
+            else
+            {
+                Logger.WriteLine(LogType.DEBUG, "Pointer binding removed. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
             }
         }
     }

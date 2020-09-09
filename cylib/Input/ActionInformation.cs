@@ -10,12 +10,14 @@ using Scancode = SDL2.SDL.SDL_Scancode;
 using Keys = SDL2.SDL.SDL_Keycode;
 
 using log;
+using System.Dynamic;
 
 namespace cylib
 {
     public enum FiredBy
     {
         BUTTON,
+        MOUSE_BUTTON,
         AXIS,
         TRIGGER
     }
@@ -30,6 +32,9 @@ namespace cylib
         public readonly float axisVal;
         public readonly float triggerVal;
 
+        public readonly int mouseX;
+        public readonly int mouseY;
+
         public readonly static ActionEventArgs None = new ActionEventArgs();
 
         public ActionEventArgs(string action, FiredBy cause, bool buttonDown, float axisVal, float triggerVal)
@@ -39,6 +44,21 @@ namespace cylib
             this.buttonDown = buttonDown;
             this.axisVal = axisVal;
             this.triggerVal = triggerVal;
+
+            mouseX = 0;
+            mouseY = 0;
+        }
+
+        public ActionEventArgs(string action, FiredBy cause, bool buttonDown, int mouseX, int mouseY)
+        {
+            this.action = action;
+            this.cause = cause;
+            this.mouseX = mouseX;
+            this.mouseY = mouseY;
+            this.buttonDown = buttonDown;
+
+            axisVal = 0;
+            triggerVal = 0;
         }
     }
     #endregion
@@ -63,15 +83,21 @@ namespace cylib
     }
 
     #region KeyMap
-    internal class KeyMap
+    internal interface ActionMap
+    {
+        bool IsFired { get; set; }
+        string Name { get; }
+    }
+
+    internal class KeyMap : ActionMap
     {
         ActionInformation Action { get; }
         internal bool CaresAboutModifiers { get { return Action.CaresAboutModifiers; } }
-        internal string ActionName { get { return Action.Name; } }
+        public string Name { get { return Action.Name; } }
         internal bool RequiresShift { get; }
         internal bool RequiresCtrl { get; }
         internal bool RequiresAlt { get; }
-        internal bool isDown = false;
+        public bool IsFired { get; set; }
 
         public KeyMap(ActionInformation action, bool requiresShift, bool requiresCtrl, bool requiresAlt)
         {
@@ -132,13 +158,60 @@ namespace cylib
             return toReturn;
         }
     }
+
+    internal class PointerMap : ActionMap
+    {
+        ActionInformation Action { get; }
+        public string Name { get { return Action.Name; } }
+        public bool IsFired { get; set; }
+
+        public PointerMap(ActionInformation action)
+        {
+            this.Action = action;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is PointerMap))
+                return false;
+
+            return Equals((PointerMap)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Action.Name.GetHashCode();
+        }
+
+        public bool Equals(PointerMap o)
+        {
+            return Action.Name == o.Action.Name;
+        }
+
+        public static bool operator ==(PointerMap a, PointerMap b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(PointerMap a, PointerMap b)
+        {
+            return !a.Equals(b);
+        }
+
+        public string GetBindDisplay(PointerButton p)
+        {
+            string toReturn = p.ToString();
+            return toReturn;
+        }
+    }
     #endregion
 
     class ActionMapper
     {
         readonly InputHandler Input;
-        readonly Dictionary<Scancode, List<KeyMap>> KeyToAction;
         readonly Dictionary<string, ActionInformation> NameToAction;
+        readonly Dictionary<Scancode, List<KeyMap>> KeyToAction;
+        readonly Dictionary<PointerButton, PointerMap> PointerToAction;
 
         /*
         Dictionary<ControllerButton, ActionType> controllerToAction;
@@ -153,6 +226,7 @@ namespace cylib
             NameToAction = new Dictionary<string, ActionInformation>();
 
             KeyToAction = new Dictionary<Scancode, List<KeyMap>>();
+            PointerToAction = new Dictionary<PointerButton, PointerMap>();
             //controllerToAction = new Dictionary<ControllerButton, ActionType>();
             //axisToAction = new Dictionary<Axis, ActionType>();
             //triggerToAction = new Dictionary<Trigger, ActionType>();
@@ -160,8 +234,8 @@ namespace cylib
             LoadFromFile(path);
         }
 
-        #region Key Get/Bind/Unbind
-        public bool TryGetAction(KeyData key, bool isDown, out ActionEventArgs args)
+        #region Actions Get/Bind/Unbind
+        public bool TryGetAction(KeyData key, out ActionMap args)
         {
             //general design for actions here --
             //actions are unique to a KeyData request, based on the ScanCode, shift, ctrl, and alt
@@ -171,7 +245,7 @@ namespace cylib
 
             if (!KeyToAction.TryGetValue(key.s, out var m))
             {
-                args = ActionEventArgs.None;
+                args = null;
                 return false;
             }
 
@@ -179,36 +253,27 @@ namespace cylib
             {
                 KeyMap map = m[i];
 
-                if (isDown)
+                if (!map.CaresAboutModifiers || ((map.RequiresShift == key.shift) && (map.RequiresCtrl == key.ctrl) && (map.RequiresAlt == key.alt)))
                 {
-                    if (!map.CaresAboutModifiers || ((map.RequiresShift == key.shift) && (map.RequiresCtrl == key.ctrl) && (map.RequiresAlt == key.alt)))
-                    {
-                        if (!map.isDown)
-                        {
-                            map.isDown = true;
-                            args = new ActionEventArgs(map.ActionName, FiredBy.BUTTON, isDown, 0, 0);
-                            return true;
-                        }
-                    }
-                }
-                else
-                {//for the onUp event, we specifically ignore if the modifiers still match
-                    //so if you do 'Wdown' 'shift' 'Wup' it still fires the same action as the Wdown did
-                    //for this reason, things like walking in cs-go should be handled by W and shift being different actions, rather than W = run-forward and W+shift = walk-forward
-                    //it *shouldnt* be possible for two actions here to *both* be down, without very specific tab-shenanigans
-                    //which would then be fixed by the player doing the action thats stuck down again -- it'd eat that input but fix it
-                    //could also be handled by the game directly with window focus events
-                    if (map.isDown)
-                    {
-                        map.isDown = false;
-                        args = new ActionEventArgs(map.ActionName, FiredBy.BUTTON, isDown, 0, 0);
-                        return true;
-                    }
+                    args = map;
+                    return true;
                 }
             }
 
-            args = ActionEventArgs.None;
+            args = null;
             return false;
+        }
+
+        public bool TryGetAction(PointerButton button, out ActionMap args)
+        {
+            if (!PointerToAction.TryGetValue(button, out var action))
+            {
+                args = null;
+                return false;
+            }
+
+            args = action;
+            return true;
         }
 
         /// <summary>
@@ -302,6 +367,22 @@ namespace cylib
 
             Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the exact key map: " + s);
         }
+
+        bool AddPointerAction(PointerButton button, ActionInformation action)
+        {
+            if (!action.SupportsButton)
+                return false;
+
+            if (PointerToAction.Remove(button, out var map))
+            {
+                Input.onBindingChange(button, map, false);
+            }
+
+            map = new PointerMap(action);
+            PointerToAction.Add(button, map);
+            Input.onBindingChange(button, map, true);
+            return true;
+        }
         #endregion
 
         #region File IO
@@ -317,8 +398,12 @@ namespace cylib
                 {
                     foreach (var map in ent.Value)
                     {
-                        wr.WriteLine("K," + ent.Key.ToString() + "," + map.RequiresShift + "," + map.RequiresCtrl + "," + map.RequiresAlt + "," + map.ActionName);
+                        wr.WriteLine("K," + ent.Key.ToString() + "," + map.RequiresShift + "," + map.RequiresCtrl + "," + map.RequiresAlt + "," + map.Name);
                     }
+                }
+                foreach (var ent in PointerToAction)
+                {
+                    wr.WriteLine("P," + ent.Key.ToString() + "," + ent.Value.Name);
                 }
             }
         }
@@ -380,6 +465,31 @@ namespace cylib
 
                         NameToAction.Add(action, new ActionInformation(action, button, axis, trigger, mods));
                     }
+                    else if (parts[0] == "P")
+                    {//pointer mapping
+                        if (parts.Length != 3)
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Pointer binding config has incorrect number of parts: " + line);
+                            continue;
+                        }
+
+                        PointerButton p;
+                        string actionString = parts[2];
+
+                        if (!Enum.TryParse(parts[1], out p))
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find pointer value in a pointer binding line: " + parts[1]);
+                            continue;
+                        }
+
+                        if (!NameToAction.TryGetValue(actionString, out var action))
+                        {
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find action declaration for key binding: " + actionString);
+                            continue;
+                        }
+
+                        AddPointerAction(p, action);
+                    }
                     else if (parts[0] == "K")
                     {//key mapping
                         if (parts.Length != 6)
@@ -390,6 +500,7 @@ namespace cylib
 
                         Scancode s;
                         bool shift, ctrl, alt;
+                        string actionString = parts[5];
 
                         if (!Enum.TryParse(parts[1], out s))
                         {
@@ -415,7 +526,6 @@ namespace cylib
                             continue;
                         }
 
-                        string actionString = parts[5];
                         if (!NameToAction.TryGetValue(actionString, out var action))
                         {
                             Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find action declaration for key binding: " + actionString);
@@ -451,7 +561,7 @@ namespace cylib
             {
                 foreach (var map in ent.Value)
                 {
-                    if (map.ActionName == action)
+                    if (map.Name == action)
                     {
                         toReturn.Add(map);
                     }

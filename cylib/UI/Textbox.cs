@@ -496,10 +496,13 @@ namespace cylib
                     if (onEnterPressed != null)
                         onEnterPressed();
 
+                    isTyping = false;
                     return true;
                 }
             }
-            return false;
+
+            //we consume all the key events here, if we're typing -- SDL will also fire OnText for normal keys, which we consume elsewhere
+            return isTyping;
         }
 
         void OnText(string toAdd)

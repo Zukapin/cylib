@@ -58,6 +58,18 @@ namespace cylib
         }
 
         private readonly Dictionary<string, PriorityList<OnAction>> e_Action = new Dictionary<string, PriorityList<OnAction>>();
+        public IEnumerable<OnAction> ActionList(string name)
+        {
+            if (e_Action.TryGetValue(name, out var actionList))
+            {
+                foreach (var a in actionList)
+                {
+                    yield return a;
+                }
+            }
+            else
+                yield break;
+        }
         public IEnumerable<Pair<OnKeyChange, OnAction>> KeyActionList(string name)
         {
             if (e_Action.TryGetValue(name, out var actionList))
@@ -65,6 +77,14 @@ namespace cylib
                 return e_keyChange.Union(actionList);
             }
             return e_keyChange.Union<OnAction>(null);
+        }
+        public IEnumerable<Pair<OnPointerChange, OnAction>> PointerActionList(string name)
+        {
+            if (e_Action.TryGetValue(name, out var actionList))
+            {
+                return e_pointerChange.Union(actionList);
+            }
+            return e_pointerChange.Union<OnAction>(null);
         }
 
 
