@@ -24,8 +24,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <CyContent Include="Content\Effects\**" />
-    <CyContent Include="Content\Fonts\**" />
+    <CyContent Include="Content\**" />
   </ItemGroup>
 
   <Target Name="CleanContent" AfterTargets="Clean">
@@ -38,7 +37,13 @@
 
 
   <ItemGroup>
-    <None Update="cylibassets.blob">
+    <None Include="..\SDL2-Libs\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="cylibassets.blob">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

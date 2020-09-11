@@ -10,14 +10,15 @@ TODO:
 
 Building using this library:
 If you're starting a new project, the easiest way is to use the CoreTest project as a base.
-	- Clone the cylib, coretest, bepuphysics2, and sdl repos.
-	- Copy the SDL2 dlls from the cylib project into the SDL2 project folder -- add them to the csproj file with copy to output directory enabled. (I should probably just have the DLLS setup in cylib)
-	- It should build then?
+	- Clone the cylib, bepuphysics2, and sdl repos.
+	- Run coretest -- if this doesn't work (*cough* Visual Studio), rebuild the individual projects and then try again. May have to (re)build cylib first, then coretest.
+	- The first build will take awhile as the assets are generated -- this build step is cached, so further builds should be fast.
+	- If you want your own project/solution/repo, copy the CoreTest folder and fix the paths inside of the coretest.csproj file.
 
 For moving an existing project, or debugging build problems:
 	- Your .csproj file will need something like:
 		  <ItemGroup>
-			<ProjectReference Include="..\..\cylib\cylib\cylib.csproj" />
+			<ProjectReference Include="..\cylib\cylib.csproj" />
 		  </ItemGroup>
 
 		  <ItemGroup>
@@ -25,7 +26,7 @@ For moving an existing project, or debugging build problems:
 		  </ItemGroup>
 
 		  <Target Name="ContentBuild" BeforeTargets="PreBuildEvent">
-			<Exec Command="dotnet run --project $(ProjectDir)..\..\cylib\cyasset --input=@(CyContent) --output=$(OutputPath)coretest.blob --coretest" />
+			<Exec Command="dotnet run --project $(ProjectDir)..\cyasset --input=@(CyContent) --output=$(OutputPath)coretest.blob --coretest" />
 		  </Target>
 	- The reference to the cylib project can be just the dll -- but you must also copy the cylibassets.blob into your output directory.
 	- All the content you want put into the asset blob must be in the CyContent ItemGroup (When adding new items with VS, check to make sure it didn't auto-remove it)
@@ -47,7 +48,7 @@ SDL2
 	- Used as the base window manager and image loader, since .NET Core doesn't have the Windows bindings that .NET Framework used to have
 	- C# bindings from https://github.com/flibitijibibo/SDL2-CS
 		- git cloned into SDL2-CS folder, using the Core.csproj
-		- move used dll's into the base folder, set to copy-if-newer, so they'll be copied into bin of anything with a SDL2 dependency
+		- dll's are in the cylib project, set to copy-if-newer into the base directory, using some magic. Should support switching to different dlls for different builds (eg non-windows)
 	- SDL2 dlls are in the SDL2-Lib directory in the cylib folder
 	- Base SDL2 dlls from https://www.libsdl.org/download-2.0.php
 	- SDL2_image dlls from https://www.libsdl.org/projects/SDL_image/

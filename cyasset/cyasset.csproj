@@ -18,7 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="freetype6.dll">
+    <None Include="freetype6.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\SDL2-Libs\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
