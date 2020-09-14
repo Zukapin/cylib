@@ -37,10 +37,12 @@ namespace cyasset
             var tempDir = AppDomain.CurrentDomain.BaseDirectory + @"tempFiles\" + args[2].Substring(2) + "\\";
             var outDir = Environment.CurrentDirectory;
 
-            SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG | SDL_image.IMG_InitFlags.IMG_INIT_JPG);
+            if (!Directory.Exists(tempDir))
+            {
+                Directory.CreateDirectory(tempDir);
+            }
 
-            Console.WriteLine("args 0: " + args[0]);
-            Console.WriteLine("args 1: " + args[1]);
+            SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG | SDL_image.IMG_InitFlags.IMG_INIT_JPG);
 
             var inputFiles = args[0].Substring(8).Split(';');
             var outputFile = args[1].Substring(9);

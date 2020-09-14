@@ -10,7 +10,7 @@ TODO:
 
 Building using this library:
 If you're starting a new project, the easiest way is to use the CoreTest project as a base.
-	- Clone the cylib, bepuphysics2, and sdl repos.
+	- Clone the cylib, bepuphysics2, and sdl repos into the same base folder.
 	- Run coretest -- if this doesn't work (*cough* Visual Studio), rebuild the individual projects and then try again. May have to (re)build cylib first, then coretest.
 	- The first build will take awhile as the assets are generated -- this build step is cached, so further builds should be fast.
 	- If you want your own project/solution/repo, copy the CoreTest folder and fix the paths inside of the coretest.csproj file.

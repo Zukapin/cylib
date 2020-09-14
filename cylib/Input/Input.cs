@@ -130,9 +130,16 @@ namespace cylib
         public readonly bool isDown;
 
         /// <summary>
-        /// Signed number of detents the mousewheel was changed by, for 'MOUSEWHEEL' events.
+        /// Signed number of detents the mousewheel was changed by in the horizontal direction, for 'MOUSEWHEEL' events.
+        /// Used for phones and iOS stuff, generally?
         /// </summary>
-        public readonly int wheelClicks;
+        public readonly int wheelX;
+
+        /// <summary>
+        /// Signed number of detents the mousewheel was changed by in the vertical direction, for 'MOUSEWHEEL' events.
+        /// This will be the usual mouse stuff.
+        /// </summary>
+        public readonly int wheelY;
 
         /// <summary>
         /// The amount the pointer moved horizontally during an aim event, as a percentage of the screen.
@@ -149,14 +156,15 @@ namespace cylib
         /// </summary>
         public readonly bool windowInFocus;
 
-        public PointerEventArgs(PointerEventType type, int x, int y, PointerButton button, bool isDown, int delta, float aimX, float aimY, bool windowInFocus)
+        public PointerEventArgs(PointerEventType type, int x, int y, PointerButton button, bool isDown, int deltaX, int deltaY, float aimX, float aimY, bool windowInFocus)
         {
             this.type = type;
             this.x = x;
             this.y = y;
             this.button = button;
             this.isDown = isDown;
-            this.wheelClicks = delta;
+            this.wheelX = deltaX;
+            this.wheelY = deltaY;
             this.aimDeltaX = aimX;
             this.aimDeltaY = aimY;
             this.windowInFocus = windowInFocus;
@@ -244,6 +252,22 @@ namespace cylib
                         else
                             onPointerAim(ev.motion.xrel / (float)stage.renderer.ResolutionWidth, ev.motion.yrel / (float)stage.renderer.ResolutionHeight, true);
                         break;
+                    case SDL.SDL_EventType.SDL_MOUSEWHEEL:
+                        if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
+                        {
+                            SDL.SDL_GetMouseState(out int mouseX, out int mouseY);
+                            int dx = ev.wheel.x;
+                            int dy = ev.wheel.y;
+
+                            if (ev.wheel.direction == (uint)SDL.SDL_MouseWheelDirection.SDL_MOUSEWHEEL_FLIPPED)
+                            {
+                                dx *= -1;
+                                dy *= -1;
+                            }
+
+                            onPointerMousewheel(mouseX, mouseY, dx, dy, true);
+                        }
+                        break;
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
                         if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
                             onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, true);
@@ -328,7 +352,7 @@ namespace cylib
 
         private void onPointerMovement(int posX, int posY, bool focus)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOVE, posX, posY, PointerButton.NONE, false, 0, 0, 0, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOVE, posX, posY, PointerButton.NONE, false, 0, 0, 0, 0, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
                 if (e(args))
@@ -336,9 +360,9 @@ namespace cylib
             }
         }
 
-        private void onPointerMousewheel(int posX, int posY, int delta, bool focus)
+        private void onPointerMousewheel(int posX, int posY, int deltaX, int deltaY, bool focus)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOUSEWHEEL, posX, posY, PointerButton.NONE, false, delta, 0, 0, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOUSEWHEEL, posX, posY, PointerButton.NONE, false, deltaX, deltaY, 0, 0, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
                 if (e(args))
@@ -348,12 +372,15 @@ namespace cylib
 
         private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus, bool mouseVisible)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, 0, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, 0, 0, focus);
             bool hasAction = map.TryGetAction(button, out var actionMap);
             if (hasAction && actionMap.IsFired == isDown)
                 hasAction = false;
 
-            ActionEventArgs actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.MOUSE_BUTTON, isDown, posX, posY);
+            ActionEventArgs actionArgs = new ActionEventArgs();
+            if (hasAction)
+                actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.MOUSE_BUTTON, isDown, posX, posY);
+
             if (!hasAction && mouseVisible)
             {
                 foreach (OnPointerChange e in events.pointerChangeList)
@@ -396,7 +423,7 @@ namespace cylib
 
         private void onPointerAim(float dX, float dY, bool focus)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.AIM, 0, 0, PointerButton.NONE, false, 0, dX, dY, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.AIM, 0, 0, PointerButton.NONE, false, 0, 0, dX, dY, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
                 if (e(args))

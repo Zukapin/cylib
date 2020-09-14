@@ -336,7 +336,7 @@ namespace cylib
                 if (args.x > scrollPos.X && args.x <= scrollPos.X + scrollScale.X
                     && args.y > scrollPos.Y && args.y <= scrollPos.Y + scrollScale.Y)
                 {
-                    sliderPos += args.wheelClicks / 120.0f * percentOfScreen * -0.3f;
+                    sliderPos += args.wheelY * percentOfScreen * -0.3f;
                     return true;
                 }
 
