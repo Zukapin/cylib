@@ -185,7 +185,7 @@ namespace cylib
                 assetData[i] = new AssetDat(a.offset, a.len);
                 assetNameToID.Add(a.name, (i + startID, a.type));
 
-                Logger.WriteLine(LogType.DEBUG, "Added asset: " + a.name + " " + a.type);
+                Logger.WriteLine(LogType.VERBOSE2, "Added asset: " + a.name + " " + a.type);
             }
 
             var b = new AssetBlob(blob, startID, assetData);

@@ -51,7 +51,7 @@ namespace log
         /// This is the static logging level. Any log at this level or more important will be logged.
         /// (For example, if the LogLevel is DEBUG, all VERBOSE logs will be silently ignored.
         /// </summary>
-        public static LogType LogLevel = LogType.VERBOSE;
+        public static LogType LogLevel = LogType.DEBUG;
 
         /// <summary>
         /// Write a line to the log.

@@ -289,7 +289,7 @@ namespace cylib
                             case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
                                 break;
                             default:
-                                Logger.WriteLine(LogType.DEBUG, "Missing handling for window event: " + ev.window.windowEvent);
+                                Logger.WriteLine(LogType.VERBOSE, "Missing handling for window event: " + ev.window.windowEvent);
                                 break;
                         }
                         break;
@@ -309,6 +309,12 @@ namespace cylib
                             var text = StringFromNativeUtf8(ev.edit.text);
                             Logger.WriteLine(LogType.DEBUG, "Got text edit input: " + text + " " + ev.edit.start + " " + ev.edit.length);
                         }
+                        break;
+                    case SDL.SDL_EventType.SDL_AUDIODEVICEADDED:
+                        break;
+                    case SDL.SDL_EventType.SDL_CONTROLLERDEVICEADDED:
+                        break;
+                    case SDL.SDL_EventType.SDL_JOYDEVICEADDED:
                         break;
                     default:
                         Logger.WriteLine(LogType.DEBUG, "Missing handling for event: " + ev.type);
@@ -478,11 +484,11 @@ namespace cylib
             //otherwise I'm not sure why this exists
             if (isBound)
             {
-                Logger.WriteLine(LogType.DEBUG, "Key binding added. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
+                Logger.WriteLine(LogType.VERBOSE, "Key binding added. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
             }
             else
             {
-                Logger.WriteLine(LogType.DEBUG, "Key binding removed. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
+                Logger.WriteLine(LogType.VERBOSE, "Key binding removed. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
             }
         }
 
@@ -490,11 +496,11 @@ namespace cylib
         {
             if (isBound)
             {
-                Logger.WriteLine(LogType.DEBUG, "Pointer binding added. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
+                Logger.WriteLine(LogType.VERBOSE, "Pointer binding added. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
             }
             else
             {
-                Logger.WriteLine(LogType.DEBUG, "Pointer binding removed. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
+                Logger.WriteLine(LogType.VERBOSE, "Pointer binding removed. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
             }
         }
     }
