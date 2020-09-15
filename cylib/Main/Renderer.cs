@@ -177,6 +177,7 @@ namespace cylib
             public const string VB_QUAD_POS_TEX_UNIT = "VB_QUAD_POS_TEX_UNIT";
             public const string VB_CIRCLE_POS_TEX_UNIT = "VB_CIRCLE_POS_TEX_UNIT";
             public const string VB_CIRCLE_POS_TEX_NORM_UNIT = "VB_CIRCLE_POS_TEX_NORM_UNIT";
+            public const string VB_SPHERE_POS_NORM_UNIT = "VB_SPHERE_POS_NORM_UNIT";
             public const string VB_BOX_POS_NORM_UNIT = "VB_BOX_POS_NORM_UNIT";
             public const string VB_CYLINDER_POS_NORM_UNIT = "VB_CYLINDER_POS_NORM_UNIT";
 
@@ -265,6 +266,7 @@ namespace cylib
                     (DefaultAssets.VB_CIRCLE_POS_TEX_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosTexNormCircle(r, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36); }),
                     (DefaultAssets.VB_BOX_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormBox(r, Vector3.Zero, new Vector3(1, 1, 1)); }),
                     (DefaultAssets.VB_CYLINDER_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormCylinder(r, Vector3.Zero, 0.5f, 1f, Vector3.UnitY, 36); }),
+                    (DefaultAssets.VB_SPHERE_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormSphere(r, 1f); }),
                 });
 
                 assetManager.AddBufferLoaders(new List<(string, AssetLoader)>()

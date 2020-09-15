@@ -74,7 +74,7 @@ PS_OUT PS(PS_IN input)
 
 	float3 pointNormal = normalize(decode(normal.Sample(mySampler, input.tex).rg));
 
-	float3 dirToLight = LightPosRadius.xyz;
+	float3 dirToLight = mul(viewMatrix, -LightPosRadius.xyz);
 	float intensity = saturate(dot(pointNormal, normalize(dirToLight)));
 	output.color.rgb = LightColorIntensity.xyz * intensity * LightColorIntensity.a;
 	output.color.a = 1;

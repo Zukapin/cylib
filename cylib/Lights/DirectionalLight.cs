@@ -33,7 +33,7 @@ namespace cylib
         {
             get
             {
-                return new Vector3(myDat.dir.X, myDat.dir.Y, myDat.dir.Z);
+                return new Vector3(-myDat.dir.X, -myDat.dir.Y, -myDat.dir.Z);
             }
             set
             {

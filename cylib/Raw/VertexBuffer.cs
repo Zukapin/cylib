@@ -290,6 +290,109 @@ namespace cylib
             return CreateFromData(renderer, box, VertexPositionNormal.sizeOf);
         }
 
+        public static VertexBuffer CreatePosNormSphere(Renderer renderer, float radius, int numHorizDivisions = 12, int numVertDivisions = 12)
+        {
+            if (numHorizDivisions < 3) //3 would be a diamond-looking thing
+                throw new Exception("Can't have a sphere with less than 3 horizontal divisions. " + numHorizDivisions);
+
+            if (numVertDivisions < 2) //2 would be a diamond-looking thing -- 2 points on the poles that go to a fat middle with horizDiv number of points
+                throw new Exception("Can't have a sphere with less than 2 vertical divisions. " + numVertDivisions);
+
+            //number of tris is 2 * numHoriz for the caps, then (numVert - 2) * numHoriz * 2 for center
+            int numTris = (2 * numHorizDivisions) + ((numVertDivisions - 2) * numHorizDivisions * 2);
+
+            //not using an index buffer, could greatly reduce number of verts if we did
+            VertexPositionNormal[] sphere = new VertexPositionNormal[numTris * 3];
+
+            int i = 0;
+            Matrix3x3 rotDown = Matrix3x3.CreateFromAxisAngle(Vector3.UnitX, (float)(Math.PI / numVertDivisions));
+            Matrix3x3 rotForward = Matrix3x3.CreateFromAxisAngle(Vector3.UnitY, (float)(Math.PI * 2.0 / numHorizDivisions));
+            
+            //top cap
+            Vector3 centerPoint = Vector3.UnitY * radius;
+            Matrix3x3.Transform(Vector3.UnitY, rotDown, out var curPoint);
+            Vector3 nextPoint;
+            var firstPoint = curPoint;
+            for (int t = 0; t < numHorizDivisions - 1; t++)
+            {
+                Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+
+                sphere[i++] = new VertexPositionNormal(centerPoint, Vector3.UnitY);
+                sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
+                sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+
+                curPoint = nextPoint;
+            }
+
+            //use the first point here so we don't accumulate some rotation error and have the verts not match
+            nextPoint = firstPoint;
+            sphere[i++] = new VertexPositionNormal(centerPoint, Vector3.UnitY);
+            sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
+            sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+
+            //body of the sphere now
+            for (int t = 0; t < numVertDivisions - 2; t++)
+            {
+                curPoint = firstPoint;
+                Matrix3x3.Transform(curPoint, rotDown, out var downPoint);
+                Vector3 firstDownPoint = downPoint;
+                Vector3 nextDownPoint;
+
+                for (int r = 0; r < numHorizDivisions - 1; r++)
+                {
+                    Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+                    Matrix3x3.Transform(downPoint, rotForward, out nextDownPoint);
+
+                    sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
+                    sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+                    sphere[i++] = new VertexPositionNormal(downPoint * radius, downPoint);
+
+                    sphere[i++] = new VertexPositionNormal(downPoint * radius, downPoint);
+                    sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+                    sphere[i++] = new VertexPositionNormal(nextDownPoint * radius, nextDownPoint);
+
+                    curPoint = nextPoint;
+                    downPoint = nextDownPoint;
+                }
+
+                nextPoint = firstPoint;
+                nextDownPoint = firstDownPoint;
+
+                sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
+                sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+                sphere[i++] = new VertexPositionNormal(downPoint * radius, downPoint);
+
+                sphere[i++] = new VertexPositionNormal(downPoint * radius, downPoint);
+                sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+                sphere[i++] = new VertexPositionNormal(nextDownPoint * radius, nextDownPoint);
+
+                firstPoint = firstDownPoint;
+            }
+
+            //bottom cap
+            centerPoint = -Vector3.UnitY * radius;
+            curPoint = firstPoint;
+
+            for (int t = 0; t < numHorizDivisions - 1; t++)
+            {
+                Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+
+                sphere[i++] = new VertexPositionNormal(centerPoint, -Vector3.UnitY);
+                sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
+                sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+
+                curPoint = nextPoint;
+            }
+
+            //use the first point here so we don't accumulate some rotation error and have the verts not match
+            nextPoint = firstPoint;
+            sphere[i++] = new VertexPositionNormal(centerPoint, -Vector3.UnitY);
+            sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
+            sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+
+            return CreateFromData(renderer, sphere, VertexPositionNormal.sizeOf);
+        }
+
         public void Dispose()
         {
             vb.Dispose();
