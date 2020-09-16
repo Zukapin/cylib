@@ -406,7 +406,7 @@ namespace cylib
 
             if (inLoad)
             {
-                toReturn = loadAsset(a);
+                toReturn = LoadAsset(a);
                 loadedAssets.Add(a, toReturn);
                 return toReturn;
             }

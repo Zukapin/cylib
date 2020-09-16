@@ -61,7 +61,7 @@ PS_OUT PS( PS_IN input )
 	//output.color.a = 1;
 	//output.color.r = 1;
 	//output.color = light.Sample(mySampler, input.tex);
-	output.color.rgb = color.Sample(mySampler, input.tex).rgb * saturate(light.Sample(mySampler, input.tex).rgb + 0.0);
+	output.color.rgb = color.Sample(mySampler, input.tex).rgb * saturate(light.Sample(mySampler, input.tex).rgb + 0.2);
 	//output.color = float4(input.tex.x, input.tex.y, 0, 1.0);
 
 	return output;

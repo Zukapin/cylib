@@ -7,7 +7,7 @@ using BepuUtilities;
 
 namespace cylib
 {
-    public class Sphere_MRT
+    public class Capsule_MRT
     {
         public Shader shader;
         public VertexBuffer buf;
@@ -20,18 +20,18 @@ namespace cylib
         Renderer renderer;
         EventManager em;
 
-        public Sphere_MRT(Renderer renderer, EventManager em, int priority)
+        public Capsule_MRT(Renderer renderer, EventManager em, int priority)
         {
             this.renderer = renderer;
             this.em = em;
 
             shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_POS_NORM_SCOLOR);
-            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_SPHERE_POS_NORM_UNIT);
+            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_CAPSULE_POS_NORM_UNIT);
             worldBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_WORLD);
             colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
 
             position = new Vector3();
-            color = Color.RosyBrown;
+            color = Color.DeepSkyBlue;
 
             em.addDrawMRT(priority, DrawMRT);
         }

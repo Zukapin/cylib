@@ -7,13 +7,6 @@ using BepuUtilities;
 
 namespace cylib
 {
-    /// <summary>
-    /// Assumes the buffer is a 3D circle with postex coords in the XY plane with radius = 1, facing positive Z.
-    /// Position will translate the circle center.
-    /// Scale will scale the XY-plane.
-    /// Face will rotate the circle so that the face is pointing in the 'face' direction. Must be normalized.
-    /// rot will rotate the circle along the other axis, 'spinning' the circle.
-    /// </summary>
     public class Cylinder_MRT
     {
         public Shader shader;

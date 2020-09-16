@@ -7,7 +7,7 @@ using BepuUtilities;
 
 namespace cylib
 {
-    public class Sphere_MRT
+    public class Box_MRT
     {
         public Shader shader;
         public VertexBuffer buf;
@@ -15,23 +15,27 @@ namespace cylib
         ConstBuffer<ColorBuffer> colorBuf;
 
         public Vector3 position;
+        public Vector3 scale;
         public Color color;
+        public Matrix3x3 rotation;
 
         Renderer renderer;
         EventManager em;
 
-        public Sphere_MRT(Renderer renderer, EventManager em, int priority)
+        public Box_MRT(Renderer renderer, EventManager em, int priority)
         {
             this.renderer = renderer;
             this.em = em;
 
             shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_POS_NORM_SCOLOR);
-            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_SPHERE_POS_NORM_UNIT);
+            buf = renderer.Assets.GetVertexBuffer(Renderer.DefaultAssets.VB_BOX_POS_NORM_UNIT);
             worldBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_WORLD);
             colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
 
             position = new Vector3();
-            color = Color.RosyBrown;
+            scale = new Vector3(1f, 1f, 1f);
+            color = Color.DarkOliveGreen;
+            rotation = Matrix3x3.Identity;
 
             em.addDrawMRT(priority, DrawMRT);
         }
@@ -46,7 +50,9 @@ namespace cylib
 
             renderer.Context.PixelShader.SetConstantBuffer(2, colorBuf.buf);
 
-            Matrix.CreateRigid(Matrix3x3.Identity, position, out worldBuffer.dat[0]);
+            Matrix3x3.CreateScale(scale, out var s);
+            var t = s * rotation;
+            Matrix.CreateRigid(t, position, out worldBuffer.dat[0]);
             worldBuffer.Write(renderer.Context);
 
             renderer.Context.VertexShader.SetConstantBuffer(1, worldBuffer.buf);

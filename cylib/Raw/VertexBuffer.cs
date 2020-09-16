@@ -318,8 +318,8 @@ namespace cylib
                 Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
 
                 sphere[i++] = new VertexPositionNormal(centerPoint, Vector3.UnitY);
-                sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
                 sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+                sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
 
                 curPoint = nextPoint;
             }
@@ -327,8 +327,8 @@ namespace cylib
             //use the first point here so we don't accumulate some rotation error and have the verts not match
             nextPoint = firstPoint;
             sphere[i++] = new VertexPositionNormal(centerPoint, Vector3.UnitY);
-            sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
             sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
+            sphere[i++] = new VertexPositionNormal(curPoint * radius, curPoint);
 
             //body of the sphere now
             for (int t = 0; t < numVertDivisions - 2; t++)
@@ -391,6 +391,177 @@ namespace cylib
             sphere[i++] = new VertexPositionNormal(nextPoint * radius, nextPoint);
 
             return CreateFromData(renderer, sphere, VertexPositionNormal.sizeOf);
+        }
+
+        public static VertexBuffer CreatePosNormCapsule(Renderer renderer, float radius, float length, int numHorizDivisions = 12, int numVertDivisions = 6)
+        {
+            if (numHorizDivisions < 3) //3 would be a triangle capsule
+                throw new Exception("Can't have a capsule with less than 3 horizontal divisions. " + numHorizDivisions);
+
+            if (numVertDivisions < 1) //1 is endpoint -> body -> endpoint with no smoothing points, very pointy line
+                throw new Exception("Can't have a capsule with less than 1 vertical divisions. " + numVertDivisions);
+
+            //number of tris is 2 * numHoriz for the tip of the caps
+            //with 4 * (numVert - 1) * numHoriz for the rest of the caps, then numHoriz * 2 for the body
+            int numTris = (2 * numHorizDivisions) + (4 * (numVertDivisions - 1) * numHorizDivisions) + (numHorizDivisions * 2);
+
+            //not using an index buffer, could greatly reduce number of verts if we did
+            VertexPositionNormal[] capsule = new VertexPositionNormal[numTris * 3];
+
+            int i = 0;
+            Matrix3x3 rotDown = Matrix3x3.CreateFromAxisAngle(Vector3.UnitX, (float)(Math.PI * 0.5 / numVertDivisions));
+            Matrix3x3 rotForward = Matrix3x3.CreateFromAxisAngle(Vector3.UnitY, (float)(Math.PI * 2.0 / numHorizDivisions));
+            float halfLen = length * 0.5f;
+
+            //top cap
+            Vector3 centerPoint = Vector3.UnitY * radius;
+            Vector3 capOffset = Vector3.UnitY * halfLen;
+            Matrix3x3.Transform(Vector3.UnitY, rotDown, out var curPoint);
+            Vector3 nextPoint;
+            var firstPoint = curPoint;
+            for (int t = 0; t < numHorizDivisions - 1; t++)
+            {
+                Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+
+                capsule[i++] = new VertexPositionNormal(centerPoint + capOffset, Vector3.UnitY);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(curPoint * radius + capOffset, curPoint);
+
+                curPoint = nextPoint;
+            }
+
+            //use the first point here so we don't accumulate some rotation error and have the verts not match
+            nextPoint = firstPoint;
+            capsule[i++] = new VertexPositionNormal(centerPoint + capOffset, Vector3.UnitY);
+            capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+            capsule[i++] = new VertexPositionNormal(curPoint * radius + capOffset, curPoint);
+
+            //top sphere-half
+            for (int t = 0; t < numVertDivisions - 1; t++)
+            {
+                curPoint = firstPoint;
+                Matrix3x3.Transform(curPoint, rotDown, out var downPoint);
+                Vector3 firstDownPoint = downPoint;
+                Vector3 nextDownPoint;
+
+                for (int r = 0; r < numHorizDivisions - 1; r++)
+                {
+                    Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+                    Matrix3x3.Transform(downPoint, rotForward, out nextDownPoint);
+
+                    capsule[i++] = new VertexPositionNormal(curPoint * radius + capOffset, curPoint);
+                    capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                    capsule[i++] = new VertexPositionNormal(downPoint * radius + capOffset, downPoint);
+
+                    capsule[i++] = new VertexPositionNormal(downPoint * radius + capOffset, downPoint);
+                    capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                    capsule[i++] = new VertexPositionNormal(nextDownPoint * radius + capOffset, nextDownPoint);
+
+                    curPoint = nextPoint;
+                    downPoint = nextDownPoint;
+                }
+
+                nextPoint = firstPoint;
+                nextDownPoint = firstDownPoint;
+
+                capsule[i++] = new VertexPositionNormal(curPoint * radius + capOffset, curPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(downPoint * radius + capOffset, downPoint);
+
+                capsule[i++] = new VertexPositionNormal(downPoint * radius + capOffset, downPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(nextDownPoint * radius + capOffset, nextDownPoint);
+
+                firstPoint = firstDownPoint;
+            }
+
+            //body
+            curPoint = firstPoint;
+            for (int t = 0; t < numHorizDivisions - 1; t++)
+            {
+                Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+
+                capsule[i++] = new VertexPositionNormal(curPoint * radius + capOffset, curPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+
+                capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+
+                curPoint = nextPoint;
+            }
+
+            nextPoint = firstPoint;
+            capsule[i++] = new VertexPositionNormal(curPoint * radius + capOffset, curPoint);
+            capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+            capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+
+            capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+            capsule[i++] = new VertexPositionNormal(nextPoint * radius + capOffset, nextPoint);
+            capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+
+            //bottom half of sphere
+            for (int t = 0; t < numVertDivisions - 1; t++)
+            {
+                curPoint = firstPoint;
+                Matrix3x3.Transform(curPoint, rotDown, out var downPoint);
+                Vector3 firstDownPoint = downPoint;
+                Vector3 nextDownPoint;
+
+                for (int r = 0; r < numHorizDivisions - 1; r++)
+                {
+                    Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+                    Matrix3x3.Transform(downPoint, rotForward, out nextDownPoint);
+
+                    capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+                    capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+                    capsule[i++] = new VertexPositionNormal(downPoint * radius - capOffset, downPoint);
+
+                    capsule[i++] = new VertexPositionNormal(downPoint * radius - capOffset, downPoint);
+                    capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+                    capsule[i++] = new VertexPositionNormal(nextDownPoint * radius - capOffset, nextDownPoint);
+
+                    curPoint = nextPoint;
+                    downPoint = nextDownPoint;
+                }
+
+                nextPoint = firstPoint;
+                nextDownPoint = firstDownPoint;
+
+                capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(downPoint * radius - capOffset, downPoint);
+
+                capsule[i++] = new VertexPositionNormal(downPoint * radius - capOffset, downPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+                capsule[i++] = new VertexPositionNormal(nextDownPoint * radius - capOffset, nextDownPoint);
+
+                firstPoint = firstDownPoint;
+            }
+
+            //bottom cap
+            centerPoint = -Vector3.UnitY * radius;
+            curPoint = firstPoint;
+
+            for (int t = 0; t < numHorizDivisions - 1; t++)
+            {
+                Matrix3x3.Transform(curPoint, rotForward, out nextPoint);
+
+                capsule[i++] = new VertexPositionNormal(centerPoint - capOffset, -Vector3.UnitY);
+                capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+                capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+
+                curPoint = nextPoint;
+            }
+
+            //use the first point here so we don't accumulate some rotation error and have the verts not match
+            nextPoint = firstPoint;
+            capsule[i++] = new VertexPositionNormal(centerPoint - capOffset, -Vector3.UnitY);
+            capsule[i++] = new VertexPositionNormal(curPoint * radius - capOffset, curPoint);
+            capsule[i++] = new VertexPositionNormal(nextPoint * radius - capOffset, nextPoint);
+
+            return CreateFromData(renderer, capsule, VertexPositionNormal.sizeOf);
         }
 
         public void Dispose()
