@@ -21,7 +21,7 @@ using Matrix = BepuUtilities.Matrix;
 using Matrix3x3 = BepuUtilities.Matrix3x3;
 using Vector3 = System.Numerics.Vector3;
 
-using log;
+using cyUtility;
 
 namespace cylib
 {
@@ -395,8 +395,8 @@ namespace cylib
                     timeLeftover -= timeStep;
 
                     double updateTime = frameTimer.Elapsed.TotalMilliseconds;
-                    if (updateTime > 8)
-                        Logger.WriteLine(LogType.DEBUG, "Long update step detected: " + updateTime);
+                    if (updateTime > 16)
+                        Logger.WriteLine(LogType.VERBOSE3, "Long update step detected: " + updateTime);
                 } while (timeLeftover > timeStep * 2);
             }
 

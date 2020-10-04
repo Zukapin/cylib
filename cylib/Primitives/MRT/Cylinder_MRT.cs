@@ -15,7 +15,9 @@ namespace cylib
         ConstBuffer<ColorBuffer> colorBuf;
 
         public Vector3 position;
+        public Vector3 scale;
         public Color color;
+        public Matrix3x3 rotation;
 
         Renderer renderer;
         EventManager em;
@@ -31,7 +33,9 @@ namespace cylib
             colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
 
             position = new Vector3();
+            scale = new Vector3(1f, 1f, 1f);
             color = Color.Green;
+            rotation = Matrix3x3.Identity;
 
             em.addDrawMRT(priority, DrawMRT);
         }
@@ -46,7 +50,9 @@ namespace cylib
 
             renderer.Context.PixelShader.SetConstantBuffer(2, colorBuf.buf);
 
-            Matrix.CreateRigid(Matrix3x3.Identity, position, out worldBuffer.dat[0]);
+            Matrix3x3.CreateScale(scale, out var s);
+            var t = s * rotation;
+            Matrix.CreateRigid(t, position, out worldBuffer.dat[0]);
             worldBuffer.Write(renderer.Context);
 
             renderer.Context.VertexShader.SetConstantBuffer(1, worldBuffer.buf);

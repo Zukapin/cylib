@@ -17,6 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\cyUtility\cyUtility.csproj" />
     <ProjectReference Include="..\..\SDL2-CS\SDL2-CS.Core.csproj" />
     <ProjectReference Include="..\..\bepuphysics2\BepuUtilities\BepuUtilities.csproj" />
     <PackageReference Include="SharpDX" Version="4.2.0" />

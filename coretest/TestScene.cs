@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
-using log;
+using cyUtility;
 using cylib;
 
 using BepuUtilities;

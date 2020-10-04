@@ -9,7 +9,7 @@ using System.IO;
 using Scancode = SDL2.SDL.SDL_Scancode;
 using Keys = SDL2.SDL.SDL_Keycode;
 
-using log;
+using cyUtility;
 using System.Dynamic;
 
 namespace cylib
@@ -415,6 +415,10 @@ namespace cylib
                 while (!r.EndOfStream)
                 {
                     string line = r.ReadLine();
+
+                    if (line.Length == 0 || line[0] == '#')
+                        continue; //file comment or empty line
+
                     string[] parts = line.Split(',');
 
                     if (parts.Length == 0 || parts.Length == 1)

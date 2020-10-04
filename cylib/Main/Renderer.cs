@@ -181,6 +181,7 @@ namespace cylib
             public const string VB_BOX_POS_NORM_UNIT = "VB_BOX_POS_NORM_UNIT";
             public const string VB_CYLINDER_POS_NORM_UNIT = "VB_CYLINDER_POS_NORM_UNIT";
             public const string VB_CAPSULE_POS_NORM_UNIT = "VB_CAPSULE_POS_NORM_UNIT";
+            public const string VB_CAPSULE_POS_NORM_HALFRAD = "VB_CAPSULE_POS_NORM_HALFRAD";
 
             public const string BUF_WORLD = "BUF_WORLD";
             public const string BUF_CAM_VIEWPROJ = "BUF_CAM_VIEWPROJ";
@@ -266,9 +267,10 @@ namespace cylib
                     (DefaultAssets.VB_CIRCLE_POS_TEX_UNIT, (Renderer r) => { return VertexBuffer.CreatePosTexCircle(r, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36); }),
                     (DefaultAssets.VB_CIRCLE_POS_TEX_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosTexNormCircle(r, Vector3.Zero, new Vector3(0, 0.5f, 0), new Vector3(0, 0, -1), 36); }),
                     (DefaultAssets.VB_BOX_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormBox(r, Vector3.Zero, new Vector3(1, 1, 1)); }),
-                    (DefaultAssets.VB_CYLINDER_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormCylinder(r, Vector3.Zero, 0.5f, 1f, Vector3.UnitY, 36); }),
+                    (DefaultAssets.VB_CYLINDER_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormCylinder(r, Vector3.Zero, 1f, 1f, Vector3.UnitY, 36); }),
                     (DefaultAssets.VB_SPHERE_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormSphere(r, 1f); }),
                     (DefaultAssets.VB_CAPSULE_POS_NORM_UNIT, (Renderer r) => { return VertexBuffer.CreatePosNormCapsule(r, 1f, 1f); }),
+                    (DefaultAssets.VB_CAPSULE_POS_NORM_HALFRAD, (Renderer r) => { return VertexBuffer.CreatePosNormCapsule(r, 0.5f, 1f); }),
                 });
 
                 assetManager.AddBufferLoaders(new List<(string, AssetLoader)>()

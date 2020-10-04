@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace log
+namespace cyUtility
 {
     /// <summary>
     /// Logging level

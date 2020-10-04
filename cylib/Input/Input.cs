@@ -7,7 +7,7 @@ using SDL2;
 using Scancode = SDL2.SDL.SDL_Scancode;
 using Keys = SDL2.SDL.SDL_Keycode;
 
-using log;
+using cyUtility;
 using System.Runtime.InteropServices;
 
 namespace cylib
