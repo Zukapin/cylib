@@ -37,10 +37,11 @@ namespace cylib
             color = Color.DarkOliveGreen;
             rotation = Matrix3x3.Identity;
 
-            em.addDrawMRT(priority, DrawMRT);
+            if (em != null)
+                em.addDrawMRT(priority, DrawMRT);
         }
 
-        void DrawMRT()
+        public void DrawMRT()
         {
             shader.Bind(renderer.Context);
             renderer.Context.InputAssembler.SetVertexBuffers(0, buf.vbBinding);

@@ -276,6 +276,8 @@ namespace cylib
             {
                 loadedAssets.Add(a, LoadAsset(a));
             }
+
+            assetsAddedDuringLoad.Clear();
         }
 
         /// <summary>
@@ -292,8 +294,15 @@ namespace cylib
             inPreload = false;
             inLoad = true;
 
+#if DEBUG
+            foreach (var a in assetsAddedDuringLoad.Except(preloadAssets))
+            {
+                Logger.WriteLine(LogType.DEBUG, "Asset added dynamically during preload: " + a);
+            }
+#endif
+
             //here we want to load everything requested, and dispose things not needed anymore
-            var s_Keep = new HashSet<string>(keepAssets.Union(preloadAssets));
+            var s_Keep = new HashSet<string>(keepAssets.Union(preloadAssets.Union(assetsAddedDuringLoad)));
             var s_toLoad = new HashSet<string>(s_Keep.Except(loadedAssets.Keys));
             var s_toDipose = new HashSet<string>(loadedAssets.Keys.Except(s_Keep));
 
@@ -387,7 +396,7 @@ namespace cylib
         {
             IDisposable toReturn = null;
 
-            if (inLoad)
+            if (inLoad || inPreload)
                 assetsAddedDuringLoad.Add(a);
 
             if (loadedAssets.TryGetValue(a, out toReturn))

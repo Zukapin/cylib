@@ -348,10 +348,11 @@ namespace cylib
         public bool Update(double dt)
         {
             if (StageExit)
+            {
                 return false;
+            }
 
-            frameTimer.Reset();
-            frameTimer.Start();
+            frameTimer.Restart();
 
             input.Update();
 
