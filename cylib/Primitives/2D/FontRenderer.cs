@@ -155,17 +155,33 @@ namespace cylib
             int index = 0;
             float penX = pos.X + calcAnchorX() + offset.X;
             float penY = pos.Y + calcAnchorY() + offset.Y;
+            float startPenX = penX;
 
             while (index < text.Length)
             {
-                int loops = Math.Min(index + glyphBuf.numElements / 6, text.Length) - index;
+                int loops = glyphBuf.numElements / 6;
 
-                for (int i = 0; i < loops; i++)
+                for (int i = 0; i < loops && i + index < text.Length; i++)
                 {
-                    var t = font.glyphs.GetValueOrDefault(text[i + index], font.unsupportedGlyph);
+                    var c = text[i + index];
+                    if (c == '\r')
+                    {
+                        index++;
+                        i--;
+                        continue;
+                    }
+                    if (c == '\n')
+                    {//special case character controls here
+                        penX = startPenX;
+                        penY += (font.ascenderHeight - font.descenderHeight) * scale;
+                        index++;
+                        i--;
+                        continue;
+                    }
+                    var t = font.glyphs.GetValueOrDefault(c, font.unsupportedGlyph);
 
                     float bear = t.bearingX * scale;
-                    if (index == 0 && i == 0)
+                    if (penX != startPenX)
                         penX -= bear;
 
                     float tdx = (font.packingBuffer / 2) / (float)font.atlas.width;

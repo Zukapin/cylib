@@ -30,10 +30,11 @@ namespace cylib
 
     public class GameStage : IDisposable
     {
-        const float timeStep = (float)(1 / 60.0);
+        public float Timestep = (float)(1 / 60.0);
+        public bool UseFixedTimestep = true;
 #if DEBUG
-        const bool drawDebug = true;
-        public static float DEBUG_TIDI = 1f;
+        const bool DrawDebug = true;
+        public static float DEBUG_TIDI = 1f; //pretends the dt passed in multiplied by this
 #endif
 
         #region DX Main
@@ -366,47 +367,57 @@ namespace cylib
             timeLeftover += dt;
 #endif
 
-            int updatesThisFrame = 0;
-
-            if (timeLeftover > timeStep)
+            if (UseFixedTimestep)
             {
-                do
+                int updatesThisFrame = 0;
+                while (timeLeftover > Timestep)
                 {
                     frameTimer.Restart();
-                    if (activeManager == loadManager)
-                    {
-                        currentScene.LoadUpdate(timeStep);
-                        loadingTime += timeStep;
-                        if (!loadingThread.IsAlive && loadingTime > currentScene.LoadTime())
-                        {
-                            FinishLoad();
-                        }
-                    }
-                    else
-                        currentScene.Update(timeStep);
 
-                    //UpdateDelegates in the eventmanager are hardcoded to go after the currentScene update
-                    //we could probably make this nicer by just making the currentScene update auto-added here with priority 0
-                    foreach (UpdateDelegate d in activeManager.updateList)
-                    {
-                        d(timeStep);
-                    }
+                    InternalUpdate(Timestep);
 
                     updatesThisFrame++;
-                    timeLeftover -= timeStep;
+                    timeLeftover -= Timestep;
 
                     double updateTime = frameTimer.Elapsed.TotalMilliseconds;
                     if (updateTime > 16)
                         Logger.WriteLine(LogType.VERBOSE3, "Long update step detected: " + updateTime);
-                } while (timeLeftover > timeStep * 2);
-            }
+                }
 
-            if (updatesThisFrame > 1)
+                if (updatesThisFrame > 1)
+                {
+                    Logger.WriteLine(LogType.VERBOSE2, "Frame miss: " + updatesThisFrame + " " + dt);
+                }
+            }
+            else
             {
-                Logger.WriteLine(LogType.DEBUG, "Frame miss: " + updatesThisFrame + " " + dt);
+                InternalUpdate((float)timeLeftover);
+                timeLeftover = 0;
             }
 
             return true;
+        }
+
+        private void InternalUpdate(float dt)
+        {
+            if (activeManager == loadManager)
+            {
+                currentScene.LoadUpdate(dt);
+                loadingTime += dt;
+                if (!loadingThread.IsAlive && loadingTime > currentScene.LoadTime())
+                {
+                    FinishLoad();
+                }
+            }
+            else
+                currentScene.Update(dt);
+
+            //UpdateDelegates in the eventmanager are hardcoded to go after the currentScene update
+            //we could probably make this nicer by just making the currentScene update auto-added here with priority 0
+            foreach (UpdateDelegate d in activeManager.updateList)
+            {
+                d(dt);
+            }
         }
         #endregion
 
@@ -491,7 +502,7 @@ namespace cylib
             //Draw 2D here
             draw2D();
 #if DEBUG
-            if (drawDebug && currentScene.Draw3D())
+            if (DrawDebug && currentScene.Draw3D())
                 drawMRTOutput();
 #endif
 

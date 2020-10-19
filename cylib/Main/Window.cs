@@ -49,6 +49,14 @@ namespace cylib
             }
         }
 
+        public string Title
+        {
+            set
+            {
+                SDL.SDL_SetWindowTitle(windowHandle, value);
+            }
+        }
+
         public Window(string title, int resX, int resY, WindowFlags flags)
         {
             windowHandle = SDL.SDL_CreateWindow(title, 50, 50, resX, resY, SDL.SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI | (SDL.SDL_WindowFlags)flags);
