@@ -115,7 +115,12 @@ namespace cylib
             input.events = activeManager;
 
             var backBuffer = Resource.FromSwapChain<Texture2D>(renderer.SwapChain, 0);
-            renderView = new RenderTargetView(renderer.Device, backBuffer);
+            renderView = new RenderTargetView(renderer.Device, backBuffer, 
+                new RenderTargetViewDescription() 
+                { 
+                    Format = Format.R8G8B8A8_UNorm_SRgb,
+                    Dimension = RenderTargetViewDimension.Texture2D,
+                });
 
             loadAssets(null); //load starting assets
             #region Load Render Targets
