@@ -257,11 +257,11 @@ namespace cylib
                         Height = winHeight,
                         AlphaMode = AlphaMode.Unspecified,
                         Flags = SwapChainFlags.None,
-                        Format = Format.R8G8B8A8_UNorm,
+                        Format = Format.R8G8B8A8_UNorm_SRgb,
                         Stereo = false,
                         Scaling = Scaling.Stretch,
                         SampleDescription = new SampleDescription(1, 0),
-                        SwapEffect = SwapEffect.FlipDiscard,
+                        SwapEffect = SwapEffect.Discard,
                         Usage = Usage.RenderTargetOutput
                     };
 
