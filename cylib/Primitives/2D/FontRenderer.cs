@@ -160,8 +160,9 @@ namespace cylib
             while (index < text.Length)
             {
                 int loops = glyphBuf.numElements / 6;
+                int i = 0;
 
-                for (int i = 0; i < loops && i + index < text.Length; i++)
+                for (; i < loops && i + index < text.Length; i++)
                 {
                     var c = text[i + index];
                     if (c == '\r')
@@ -217,10 +218,10 @@ namespace cylib
                     }
                 }
 
-                glyphBuf.Write(renderer.Context, 0, loops * 6);
-                renderer.Context.Draw(6 * loops, 0);
+                glyphBuf.Write(renderer.Context, 0, i * 6);
+                renderer.Context.Draw(6 * i, 0);
 
-                index += loops;
+                index += i;
             }
 
             renderer.Context.Rasterizer.State = preRast;
