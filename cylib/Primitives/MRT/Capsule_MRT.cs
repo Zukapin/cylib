@@ -63,7 +63,8 @@ namespace cylib
 
         public void Dispose()
         {
-            em.removeMRT(DrawMRT);
+            if (em != null)
+                em.removeMRT(DrawMRT);
         }
     }
 }

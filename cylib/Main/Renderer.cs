@@ -14,7 +14,7 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
-using Device = SharpDX.Direct3D11.Device;
+using Device1 = SharpDX.Direct3D11.Device1;
 using Resource = SharpDX.Direct3D11.Resource;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 
@@ -46,8 +46,8 @@ namespace cylib
 
         public bool VSync { get; set; } = true;
 
-        private readonly Device device;
-        public Device Device
+        private readonly Device1 device;
+        public Device1 Device
         {
             get
             {
@@ -64,8 +64,8 @@ namespace cylib
             }
         }
 
-        private readonly SwapChain swapChain;
-        public SwapChain SwapChain
+        private readonly SwapChain1 swapChain;
+        public SwapChain1 SwapChain
         {
             get
             {
@@ -233,27 +233,42 @@ namespace cylib
                 resWidth = winWidth;
                 resHeight = winHeight;
 
-                var desc = new SwapChainDescription()
-                {
-                    BufferCount = 2,
-                    ModeDescription = new ModeDescription(winWidth, winHeight, new Rational(60, 1), Format.R8G8B8A8_UNorm_SRgb),
-                    IsWindowed = true,
-                    OutputHandle = winInfo.info.win.window,
-                    SampleDescription = new SampleDescription(1, 0),
-                    SwapEffect = SwapEffect.Discard,
-                    Usage = Usage.RenderTargetOutput
-                };
 
 #if DEBUG
-                Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.Debug, desc, out device, out swapChain);
+                using (var tempDevice = new SharpDX.Direct3D11.Device(DriverType.Hardware, DeviceCreationFlags.Debug, new[] { FeatureLevel.Level_11_0, FeatureLevel.Level_11_1 }))
 #else
-            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, desc, out device, out swapChain);
+                using (var tempDevice = new Device(DriverType.Hardware, DeviceCreationFlags.None, new[] { FeatureLevel.Level_11_1 }))
 #endif
+                {
+                    device = tempDevice.QueryInterfaceOrNull<Device1>();
 
-                var factory = swapChain.GetParent<Factory>();
-                factory.MakeWindowAssociation(window.Handle, WindowAssociationFlags.IgnoreAltEnter);
+                    if (device == null)
+                        throw new Exception("Couldn't create a DX11 device");
+                }
 
-                factory.Dispose();
+                using (var dxgi = device.QueryInterface<SharpDX.DXGI.Device2>()) //i have no clue why this is device2
+                using (var adapter = dxgi.Adapter)
+                using (var factory = adapter.GetParent<Factory2>())
+                {
+                    var desc = new SwapChainDescription1()
+                    {
+                        BufferCount = 2,
+                        Width = winWidth,
+                        Height = winHeight,
+                        AlphaMode = AlphaMode.Unspecified,
+                        Flags = SwapChainFlags.None,
+                        Format = Format.R8G8B8A8_UNorm,
+                        Stereo = false,
+                        Scaling = Scaling.Stretch,
+                        SampleDescription = new SampleDescription(1, 0),
+                        SwapEffect = SwapEffect.FlipDiscard,
+                        Usage = Usage.RenderTargetOutput
+                    };
+
+                    swapChain = new SwapChain1(factory, device, window.OSHandle, ref desc);
+
+                    factory.MakeWindowAssociation(window.Handle, WindowAssociationFlags.IgnoreAltEnter);
+                }
 
                 //Init context
                 context = Device.ImmediateContext;
@@ -300,7 +315,7 @@ namespace cylib
                 });
             }
 
-            #region Raster Init
+#region Raster Init
             myRasterDebug = new RasterizerState(Device, new RasterizerStateDescription()
             {
                 CullMode = CullMode.None,
@@ -318,8 +333,8 @@ namespace cylib
                 IsScissorEnabled = true
             });
             Context.Rasterizer.State = rasterNormal;
-            #endregion
-            #region Sampler Init
+#endregion
+#region Sampler Init
             mySamplerAnisotropy = new SamplerState(Device, new SamplerStateDescription()
             {
                 AddressU = TextureAddressMode.Wrap,
@@ -347,8 +362,8 @@ namespace cylib
                 AddressW = TextureAddressMode.Wrap,
                 Filter = Filter.MinMagMipPoint
             });
-            #endregion
-            #region Blend State Setup
+#endregion
+#region Blend State Setup
             {
                 BlendStateDescription desc = new BlendStateDescription();
                 desc.AlphaToCoverageEnable = false;
@@ -390,7 +405,7 @@ namespace cylib
                 desc.RenderTarget[0].IsBlendEnabled = true;
                 myBlendAlphaTest = new BlendState(Device, desc);
             }
-            #endregion
+#endregion
         }
 
         public void Dispose()

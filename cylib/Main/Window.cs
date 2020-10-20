@@ -49,6 +49,16 @@ namespace cylib
             }
         }
 
+        public IntPtr OSHandle
+        {
+            get
+            {
+                SDL.SDL_SysWMinfo info = default;
+                SDL.SDL_GetWindowWMInfo(windowHandle, ref info);
+                return info.info.win.window; //only works on windows
+            }
+        }
+
         public string Title
         {
             set

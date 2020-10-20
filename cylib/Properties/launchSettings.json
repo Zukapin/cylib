@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "cylib": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

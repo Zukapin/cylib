@@ -151,7 +151,7 @@ namespace cylib
 
             Texture2D colorTarget = new Texture2D(renderer.Device, new Texture2DDescription()
             {
-                Format = Format.R8G8B8A8_UNorm_SRgb,
+                Format = Format.R8G8B8A8_UNorm,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
                 Width = renderer.ResolutionWidth,
                 Height = renderer.ResolutionHeight,
@@ -187,7 +187,7 @@ namespace cylib
 
             Texture2D lightTarget = new Texture2D(renderer.Device, new Texture2DDescription()
             {
-                Format = Format.R8G8B8A8_UNorm_SRgb,
+                Format = Format.R8G8B8A8_UNorm,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
                 Width = renderer.ResolutionWidth,
                 Height = renderer.ResolutionHeight,
@@ -509,7 +509,7 @@ namespace cylib
             //End 2D
             renderer.Context.OutputMerger.SetBlendState(null, null, -1);
 
-            renderer.SwapChain.Present(renderer.VSync ? 1 : 0, PresentFlags.None);
+            renderer.SwapChain.Present(renderer.VSync ? 1 : 0, PresentFlags.None, new PresentParameters());
         }
 
         void drawMRT()
