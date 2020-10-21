@@ -156,7 +156,7 @@ namespace cylib
 
             Texture2D colorTarget = new Texture2D(renderer.Device, new Texture2DDescription()
             {
-                Format = Format.R8G8B8A8_UNorm_SRgb,
+                Format = Format.R8G8B8A8_UNorm,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
                 Width = renderer.ResolutionWidth,
                 Height = renderer.ResolutionHeight,
@@ -192,7 +192,7 @@ namespace cylib
 
             Texture2D lightTarget = new Texture2D(renderer.Device, new Texture2DDescription()
             {
-                Format = Format.R8G8B8A8_UNorm_SRgb,
+                Format = Format.R8G8B8A8_UNorm,
                 BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
                 Width = renderer.ResolutionWidth,
                 Height = renderer.ResolutionHeight,

@@ -237,7 +237,7 @@ namespace cylib
 #if DEBUG
                 using (var tempDevice = new SharpDX.Direct3D11.Device(DriverType.Hardware, DeviceCreationFlags.Debug, new[] { FeatureLevel.Level_11_0, FeatureLevel.Level_11_1 }))
 #else
-                using (var tempDevice = new Device(DriverType.Hardware, DeviceCreationFlags.None, new[] { FeatureLevel.Level_11_1 }))
+                using (var tempDevice = new SharpDX.Direct3D11.Device(DriverType.Hardware, DeviceCreationFlags.None, new[] { FeatureLevel.Level_11_1 }))
 #endif
                 {
                     device = tempDevice.QueryInterfaceOrNull<Device1>();
