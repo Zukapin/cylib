@@ -17,14 +17,14 @@ namespace cylib
 {
     public class ConstBuffer<T> : IDisposable where T : struct
     {
-        internal readonly T[] dat;
-        internal readonly Buffer buf;
-        internal readonly int numElements;
+        public readonly T[] dat;
+        public readonly Buffer buf;
+        public readonly int numElements;
 
         /// <summary>
         /// Shader resource view for the buffer, if created with flags where that makes sense. Otherwise null.
         /// </summary>
-        internal readonly ShaderResourceView srv;
+        public readonly ShaderResourceView srv;
 
         internal ConstBuffer(Renderer renderer, int numElements, ResourceUsage resUsage, BindFlags bindFlags, CpuAccessFlags cpuFlags, ResourceOptionFlags resOptFlags)
         {
@@ -76,14 +76,14 @@ namespace cylib
                 throw new InvalidOperationException("Don't know how to create this");
         }
 
-        internal void Write(DeviceContext context)
+        public void Write(DeviceContext context)
         {
             var dataBox = context.MapSubresource(buf, 0, MapMode.WriteDiscard, MapFlags.None);
             Utilities.Write(dataBox.DataPointer, dat, 0, numElements);
             context.UnmapSubresource(buf, 0);
         }
 
-        internal void Write(DeviceContext context, int offset, int num)
+        public void Write(DeviceContext context, int offset, int num)
         {
             var dataBox = context.MapSubresource(buf, 0, MapMode.WriteDiscard, MapFlags.None);
             Utilities.Write(dataBox.DataPointer, dat, offset, num);

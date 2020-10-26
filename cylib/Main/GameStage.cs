@@ -33,7 +33,7 @@ namespace cylib
         public float Timestep = (float)(1 / 60.0);
         public bool UseFixedTimestep = true;
 #if DEBUG
-        const bool DrawDebug = true;
+        const bool DrawDebug = false;
         public static float DEBUG_TIDI = 1f; //pretends the dt passed in multiplied by this
 #endif
 
@@ -428,12 +428,15 @@ namespace cylib
 
         #region Drawing
 
-        public void Draw()
+        public void Draw(RenderTargetView renderTarget = null, bool present = true)
         {
+            if (renderTarget == null)
+                renderTarget = renderView;
+
             //MRT Setup
             renderer.Context.ClearRenderTargetView(colorRTV, new SharpDX.Mathematics.Interop.RawColor4(0.04f, 0.04f, 0.1725f, 0f));
             renderer.Context.ClearRenderTargetView(normalRTV, new SharpDX.Mathematics.Interop.RawColor4());
-            renderer.Context.ClearRenderTargetView(renderView, new SharpDX.Mathematics.Interop.RawColor4());
+            renderer.Context.ClearRenderTargetView(renderTarget, new SharpDX.Mathematics.Interop.RawColor4());
             renderer.Context.ClearDepthStencilView(depthDSV, DepthStencilClearFlags.Depth, 0.0f, 0);
 
             renderer.Context.Rasterizer.SetViewport(0, 0, renderer.ResolutionWidth, renderer.ResolutionHeight);
@@ -479,12 +482,10 @@ namespace cylib
                 //Light Draw
                 drawLights();
 
-                //Light End
-                renderer.Context.OutputMerger.SetBlendState(null, null, -1);
-
                 //Compile MRT
+                renderer.Context.OutputMerger.SetBlendState(null, null, -1);
                 renderer.Context.OutputMerger.ResetTargets();
-                renderer.Context.OutputMerger.SetTargets(renderView);
+                renderer.Context.OutputMerger.SetTargets(renderTarget);
                 renderer.Context.PixelShader.SetShaderResource(3, lightSRV);
                 s_Compile.Bind(renderer.Context);
                 renderer.Context.Draw(6, 0);
@@ -492,7 +493,7 @@ namespace cylib
                 //Post Process Setup
                 renderer.Context.VertexShader.SetConstantBuffer(0, viewProjBuffer.buf);
                 renderer.Context.PixelShader.SetShaderResources(0, 4, null, null, null, null);
-                renderer.Context.OutputMerger.SetTargets(renderView);
+                renderer.Context.OutputMerger.SetTargets(renderTarget);
                 renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
 
                 //Draw Post Process Here
@@ -502,7 +503,7 @@ namespace cylib
             //2D Setup
             renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
             renderer.Context.VertexShader.SetConstantBuffer(0, fullscreenCameraBuffer);
-            renderer.Context.OutputMerger.SetTargets(renderView);
+            renderer.Context.OutputMerger.SetTargets(renderTarget);
 
             //Draw 2D here
             draw2D();
@@ -514,7 +515,8 @@ namespace cylib
             //End 2D
             renderer.Context.OutputMerger.SetBlendState(null, null, -1);
 
-            renderer.SwapChain.Present(renderer.VSync ? 1 : 0, PresentFlags.None, presentParams);
+            if (present)
+                renderer.SwapChain.Present(renderer.VSync ? 1 : 0, PresentFlags.None, presentParams);
         }
 
         PresentParameters presentParams = new PresentParameters()
