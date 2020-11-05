@@ -23,12 +23,17 @@ namespace cylib
         EventManager em;
 
         public Capsule_MRT(Renderer renderer, EventManager em, int priority, string VertexBuffer = Renderer.DefaultAssets.VB_CAPSULE_POS_NORM_UNIT)
+            : this (renderer, em, priority, renderer.Assets.GetVertexBuffer(VertexBuffer))
+        {
+        }
+
+        public Capsule_MRT(Renderer renderer, EventManager em, int priority, VertexBuffer VertexBuffer)
         {
             this.renderer = renderer;
             this.em = em;
 
             shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_POS_NORM_SCOLOR);
-            buf = renderer.Assets.GetVertexBuffer(VertexBuffer);
+            buf = VertexBuffer;
             worldBuffer = renderer.Assets.GetBuffer<Matrix>(Renderer.DefaultAssets.BUF_WORLD);
             colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
 

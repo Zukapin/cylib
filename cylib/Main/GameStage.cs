@@ -100,7 +100,7 @@ namespace cylib
         Thread loadingThread;
 
         public readonly Renderer renderer;
-        RenderTargetView renderView;
+        public readonly RenderTargetView renderView;
 
         public GameStage(Renderer renderer, string actionFile)
         {
