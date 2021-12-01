@@ -86,7 +86,18 @@ namespace cylib
 
     public struct KeyData
     {
+        /// <summary>
+        /// The Scancode value of the key event.
+        /// Scancode values are 'physical' keys that should not change. Generally used for action binding.
+        /// For example, if you switch your keyboard to a foreign language, for each physical button, the scancodes will remain the same, but the keycodes can change.
+        /// </summary>
         public readonly Scancode s;
+
+        /// <summary>
+        /// The keycode value of the key event.
+        /// Keycodes are 'virtual' keys that may not normally correspond to the same physical key. Generally used for typing.
+        /// For example, if you switch your keyboard to a foreign language, for each physical button, the scancodes will remain the same, but the keycodes can change.
+        /// </summary>
         public readonly Keys k;
         public readonly bool shift;
         public readonly bool ctrl;

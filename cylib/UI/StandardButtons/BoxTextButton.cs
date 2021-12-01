@@ -11,10 +11,10 @@ namespace cylib
     public class BoxTextButton : Button, IDisposable
     {
         static readonly Color bgColor = Color.Black;
-        static readonly Color baseColor = Color.White;
-        static readonly Color highlightColor = Color.DarkBlue;
-        static readonly Color mouseOverColor = Color.Blue;
-        static readonly Color fontColor = Color.White;
+        Color baseColor = Color.White;
+        Color highlightColor = Color.DarkBlue;
+        Color mouseOverColor = Color.Blue;
+        Color fontColor = Color.White;
 
         RoundedRectangle_2D rect;
         FontRenderer font;
@@ -53,6 +53,55 @@ namespace cylib
             set
             {
                 rect.mainColor = value;
+            }
+        }
+
+        public Color BorderColor
+        {
+            get
+            {
+                return baseColor;
+            }
+            set
+            {
+                baseColor = value;
+                rect.borderColor = value;
+            }
+        }
+
+        public Color FontColor
+        {
+            get
+            {
+                return font.color;
+            }
+            set
+            {
+                font.color = value;
+            }
+        }
+
+        public Color HighlightColor
+        {
+            get
+            {
+                return highlightColor;
+            }
+            set
+            {
+                highlightColor = value;
+            }
+        }
+
+        public Color MouseoverColor
+        {
+            get
+            {
+                return mouseOverColor;
+            }
+            set
+            {
+                mouseOverColor = value;
             }
         }
 
