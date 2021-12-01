@@ -1,1 +1,6 @@
-﻿See the cylib\notes folder
+A general purpose windowing/rendering/input-handling library. Base library for my other probjects.
+Coretest is the example/test project.
+
+Working towards cross-platform using SDL2/Vulkan but cross-platform graphics support is getting weird so haven't bothered. All DX11 for now.
+ 
+See the cylib\notes folder for other documentation.
