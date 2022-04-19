@@ -1,11 +1,8 @@
-﻿Build details
-update dx bindings to https://github.com/orgs/terrafx/packages
-update bepuphus to v2
-
-TODO: 
+﻿TODO: 
 	- Upgrade font support
 		- Add additional unicode points https://blog.hypersect.com/improving-the-font-pipeline/
 		- Need to upgrade the sdf rendering, can use multiple channels and probably get the anti-aliasing a little Less Dumb (Could stack fonts in different channels for extra terrible)
+	- Update DX bindings to something still supported -- https://github.com/orgs/terrafx/packages ??
 
 
 Building using this library:
@@ -37,14 +34,13 @@ For moving an existing project, or debugging build problems:
 Dependencies are split into library and build. Library dependencies are required at runtime on the client computer. Build dependencies are only required for development.
 
 Library Dependencies:
-.NET 5.0
-	- Updated 8/31/2020
+.NET 6.0
+	- Updated 4/19/2022
 	- From https://github.com/dotnet/core
-	- Using RC1
-	- Requires the latest VS 2019 Preview to work with VS
+	- Currently in preview
 
 SDL2 
-	- Updated 8/31/2020
+	- Updated 4/19/2022
 	- Used as the base window manager and image loader, since .NET Core doesn't have the Windows bindings that .NET Framework used to have
 	- C# bindings from https://github.com/flibitijibibo/SDL2-CS
 		- git cloned into SDL2-CS folder, using the Core.csproj
@@ -56,7 +52,7 @@ SDL2
 	- non-windows binaries not supported, need a test machine
 
 BepuUtilities
-	- Updated 8/31/2020
+	- Updated 4/19/2022
 	- Used for Matrix for Cameras, basically? Whatevs
 
 SharpDX
