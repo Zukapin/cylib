@@ -6,7 +6,14 @@
 	- Intermediate build content may accrue in the cyasset/bin folder, if you have a few game projects. It generally will clean itself during builds for a single project.
 		- Deleting that entire folder is a good way to force a full actual rebuild
 
+All content is processed using the cyasset project, which uses default options given the filetype provided.
+If you wish to use custom processing for an asset, you can add a file of the same name with an addition extension of '.cyopt'.
+So a font with name segoeui.ttf would have a file named segoeui.ttf.cyopt, with a text-based list of options to use when processing the font file.
+Options are presented in individual lines as [OPTION]=[VALUE]
+Below is the available options and defaults when processing a file.
+
 Shader Args:
+NAME is SH_[filename], with no file type. (Compile.fx -> SH_Compile)
 INPUTELEMENTS - Shader Input Elements - Default = Auto-parse
 	- Expected format is a list [(string)ElementName];[(int)ElementIndex];[(int)ElementFormat];[(int)ElementOffset];[(int)ElementSlot];NextElement
 		- For more information about these args, look at how the Shader class in the library parses it
@@ -17,13 +24,14 @@ INPUTELEMENTS - Shader Input Elements - Default = Auto-parse
 		- If you want something else, use this option
 
 Texture Args:
-N/A. Just copies the texture in as an asset. Finds .bmp, .png, .jpg
+Does not current actually follow any options. Just copies the texture in as an asset. Accepts .bmp, .png, .jpg
+NAME is TEX_[filename], with no file type.
 
 Font Args:
 NUMOUT - Number of Output Files - Default = 1
 	- The number of output files for this font. Other arguments will expect a ';' delimited list, if this is greater than 1.
 
-NAME - Asset Name - Default = FONT_*filename*
+NAME - Asset Name - Default = FONT_[filename]
 	- The asset name as viewed from the asset manager. What is used when calling LoadFont(*name*);
 
 SUPPORTEDCHARS - Supported Character Set - Default = ASCII table, more or less

@@ -47,6 +47,7 @@ namespace cyasset
             var inputFiles = args[0].Substring(8).Split(';');
             var outputFile = args[1].Substring(9);
 
+            Console.WriteLine("Processing content files... {0} files given to process", inputFiles.Length);
             List<ContentHeaderInformation> contentFiles = new List<ContentHeaderInformation>();
             DateTime lastContentUpdate = DateTime.MinValue;
             foreach (var inFile in inputFiles)
@@ -67,8 +68,7 @@ namespace cyasset
                     if (lastDate > lastContentUpdate)
                         lastContentUpdate = lastDate;
                 }
-
-                if (inFile.EndsWith(".fx"))
+                else if (inFile.EndsWith(".fx"))
                 {
                     //process shader
                     ShaderCompiler.ProcessShader(inFile, opts, lastWrittenTo, tempDir, out var contentInf, out var lastDate);
@@ -77,14 +77,17 @@ namespace cyasset
                     if (lastDate > lastContentUpdate)
                         lastContentUpdate = lastDate;
                 }
-
-                if (inFile.EndsWith(".bmp") || inFile.EndsWith(".png") || inFile.EndsWith(".jpg"))
+                else if (inFile.EndsWith(".bmp") || inFile.EndsWith(".png") || inFile.EndsWith(".jpg"))
                 {
                     ImageHandler.ProcessImage(inFile, opts, lastWrittenTo, tempDir, out var contentInf, out var lastDate);
                     contentFiles.AddRange(contentInf);
 
                     if (lastDate > lastContentUpdate)
                         lastContentUpdate = lastDate;
+                }
+                else
+                {
+                    Console.WriteLine("WARNING: Unknown or unsupported filetype provided, ignoring file: " + inFile);
                 }
             }
 
@@ -109,7 +112,10 @@ namespace cyasset
             if (File.Exists(outputFile))
             {
                 if (File.GetLastWriteTimeUtc(outputFile) >= lastContentUpdate)
+                {
+                    Console.WriteLine("Content processing finished. All files previously cached.");
                     return;
+                }
             }
 
             //start writing the output
@@ -141,6 +147,8 @@ namespace cyasset
             {
                 os.Write(File.ReadAllBytes(of.Path));
             }
+
+            Console.WriteLine("Content processing finished.");
         }
 
         static void ReadOptions(string file, out Dictionary<string, string> opts, out DateTime lastWrittenTo)
