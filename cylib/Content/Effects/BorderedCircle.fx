@@ -91,6 +91,10 @@ float dis = 1 - length(input.localPos);
 //then we go to outer edge is -0.5f, innter is 0.5
 //abs makes the center 0, both edges 0.5
 //then we do 0.5 - val to get positive in the center, negative in the outer
+
+//laterupdate -- working on the 2d version of this shader and i have no idea how this edge works
+//it *seems* like it shouldn't and thats weird (and it doesn't *quite* work for the 2D...)
+//check BorderedCircle2D.fx if that still exists
 float edge = 0.5f - abs(dis * input.borderInfo.x / input.borderInfo.y - 0.5f);
 
 float radThresh = length(float2(ddx(dis), ddy(dis)));
