@@ -1,7 +1,7 @@
 ﻿struct VS_IN
 {
-	float3 pos; //z component is kinda worthless, but it makes the struct better memory-aligned
-	float radius;
+	float2 pos;
+	float2 widthHeight;
 	float4 color;
 };
 
@@ -33,17 +33,17 @@ PS_IN VS(uint vID : SV_VertexID)
 	uint index = vID >> 2u; //which circle is being drawn
 	uint localID = vID & 3u; //last 2 bits -- [0, 3], corresponding to the vertex being drawn
 
-	float2 center = vertData[index].pos.xy;
-	float radius = vertData[index].radius;
+	float2 pos = vertData[index].pos.xy;
+	float2 widthHeight = vertData[index].widthHeight;
 
 	//four verts are center + u + t, center + u - t, center - u + t, center - u - t
 	//offset is being set here to [-1.1, 1.1]
 	//for x, vertex 0 & 1 = 1 -- vertex 2 & 3 = -1
 	//for y, vertex 0 & 2 = 1 -- vertex 1 & 3 = -1
 	//scaling above [-1, 1] to add a little wiggleroom for anti-aliasing 
-	float2 offset = 1.1f - 1.1f * float2(((localID << 1) & 2), ((localID) & 2));
+	float2 offset = 0.6f * float2(((localID << 1) & 2), ((localID) & 2)) - 0.1f;
 
-	output.pos = mul(mul(projMatrix, viewMatrix), float4(center + (offset * radius), vertData[index].pos.z, 1));
+	output.pos = mul(mul(projMatrix, viewMatrix), float4(pos + (offset * widthHeight), 0, 1));
 
 	output.localPos = offset;
 	output.color = vertData[index].color;
@@ -55,17 +55,16 @@ PS_OUT PS(PS_IN input) : SV_Target
 {
 	PS_OUT output = (PS_OUT)0;
 
-	//length(input.localPos) is [0, sqrt(2)]
-	//we want >0 to be inside the circle, <0 to be outside
-	//so we transform that to [1 - sqrt(2), 1]
-	float dis = 1 - length(input.localPos);
-
-	float radThresh = length(float2(ddx(dis), ddy(dis)));
+	//we want >0 inside, <0 to be outside
+	//localpos is [-0.1, 1.1]
+	//want [0, 1] to be inside
+	float2 dis = 0.5f - abs(input.localPos - 0.5f);
+	float2 thresh = abs(float2(ddx(dis.x), ddy(dis.y)));
+	dis = dis / thresh;
 
 	output.color = input.color;
-	//output.color.a = output.color.a * smoothstep(-radThresh, radThresh, dis);
-	output.color.a = output.color.a * smoothstep(0, 1, dis / radThresh + 0.5f);
-	//output.color.a = output.color.a * saturate(dis / radThresh + 0.5f);
+	//output.color.a = output.color.a * saturate(min(dis.x, dis.y) + 0.5f);
+	output.color.a = output.color.a * smoothstep(0, 1, min(dis.x, dis.y) + 0.5f);
 
 	return output;
 }

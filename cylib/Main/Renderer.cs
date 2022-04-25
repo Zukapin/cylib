@@ -193,6 +193,8 @@ namespace cylib
             public const string BUF_ROUNDED_RECT = "BUF_ROUNDED_RECT";
             public const string BUF_CIRCLE = "BUF_CIRCLE";
             public const string BUF_BORDERED_CIRCLE = "BUF_BORDERED_CIRCLE";
+            public const string BUF_RECTANGLE = "BUF_RECTANGLE";
+            public const string BUF_BORDERED_RECTANGLE = "BUF_BORDERED_RECTANGLE";
             public const string BUF_QUAD_INDEX = "BUF_QUAD_INDEX";
 
             public const string FONT_DEFAULT = "FONT_DEFAULT";
@@ -209,6 +211,8 @@ namespace cylib
             public const string SH_POS_NORM_SCOLOR = "SH_PosNormSColor";
             public const string SH_CIRCLE_2D = "SH_Circle2D";
             public const string SH_BORDERED_CIRCLE_2D = "SH_BorderedCircle2D";
+            public const string SH_RECTANGLE_2D = "SH_Rectangle2D";
+            public const string SH_BORDERED_RECTANGLE_2D = "SH_BorderedRectangle2D";
 
             public const string SH_DEBUG_DEPTH = "SH_DepthDebug";
             public const string SH_DEBUG_NORMAL = "SH_NormalDebug";
@@ -304,8 +308,10 @@ namespace cylib
                     (DefaultAssets.BUF_ROUNDED_RECT, (Renderer r) => { return new ConstBuffer<RoundedRectData>(r, 1, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None); }),
                     (DefaultAssets.BUF_CIRCLE, (Renderer r) => { return new ConstBuffer<CircleData>(r, 128, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured); }),
                     (DefaultAssets.BUF_BORDERED_CIRCLE, (Renderer r) => { return new ConstBuffer<BorderedCircleData>(r, 128, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured); }),
+                    (DefaultAssets.BUF_RECTANGLE, (Renderer r) => { return new ConstBuffer<RectangleData>(r, 128, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured); }),
+                    (DefaultAssets.BUF_BORDERED_RECTANGLE, (Renderer r) => { return new ConstBuffer<BorderedRectangleData>(r, 128, ResourceUsage.Dynamic, BindFlags.ShaderResource, CpuAccessFlags.Write, ResourceOptionFlags.BufferStructured); }),
                     (DefaultAssets.BUF_QUAD_INDEX, (Renderer r) => {
-                        int ibLen = 128 * 6;
+                        int ibLen = 128 * 6; //this should match the number of primitaives stored in buffers than use this
                         ushort[] ib = new ushort[ibLen];
                         for (int i = 0; i < ib.Length / 6; i++)
                         {

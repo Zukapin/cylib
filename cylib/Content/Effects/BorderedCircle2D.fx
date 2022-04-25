@@ -73,8 +73,8 @@ PS_OUT PS(PS_IN input) : SV_Target
 	float radThresh = length(float2(ddx(dis), ddy(dis)));
 	float edgeThresh = length(float2(ddx(edge), ddy(edge)));
 
-	output.color = lerp(input.centerColor, input.borderColor, smoothstep(-edgeThresh, edgeThresh, edge));
-	output.color.a = output.color.a * smoothstep(-radThresh, radThresh, dis);
+	output.color = lerp(input.borderColor, input.centerColor, smoothstep(0, 1, edge / edgeThresh + 0.5f));
+	output.color.a = output.color.a * smoothstep(0, 1, dis / radThresh + 0.5f);
 
 	return output;
 }
