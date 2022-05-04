@@ -12,7 +12,7 @@ using SharpDX.DXGI;
 namespace cylib
 {
     [StructLayout(LayoutKind.Explicit, Size = 64)]
-    struct BorderedRectangleData
+    public struct BorderedRectangleData
     {
         [FieldOffset(0)]
         public Vector2 pos;
@@ -26,31 +26,39 @@ namespace cylib
         public Vector4 innerColor;
         [FieldOffset(48)]
         public Vector4 borderColor;
+
+        public BorderedRectangleData(Vector2 pos, float width, float height, float borderWidth, float borderHeight, Color innerColor, Color borderColor)
+        {
+            this.pos = pos;
+            this.widthHeight = new Vector2(width, height);
+            this.borderWidthHeight = new Vector2(borderWidth, borderHeight);
+            pad = new Vector2();
+            this.innerColor = Texture.convertToLinear(innerColor);
+            this.borderColor = Texture.convertToLinear(borderColor);
+        }
     }
 
     public class BorderedRectangles_2D : IDisposable
     {
         public Shader shader;
-        private ConstBuffer<BorderedRectangleData> circleBuf;
+        private ConstBuffer<BorderedRectangleData> rectBuf;
         private ConstBuffer<ushort> indexBuffer;
 
-        public List<(Vector2 position, float width, float height, float borderWidth, float borderHeight, 
-            Color innerColor, Color borderColor)> Rectangles;
+        IEnumerable<BorderedRectangleData> Rectangles;
 
         Renderer renderer;
         EventManager em;
 
-        public BorderedRectangles_2D(Renderer renderer, EventManager em, int priority)
+        public BorderedRectangles_2D(Renderer renderer, EventManager em, int priority, IEnumerable<BorderedRectangleData> Rectangles)
         {
             this.renderer = renderer;
             this.em = em;
 
             shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_BORDERED_RECTANGLE_2D);
-            circleBuf = renderer.Assets.GetBuffer<BorderedRectangleData>(Renderer.DefaultAssets.BUF_BORDERED_RECTANGLE);
+            rectBuf = renderer.Assets.GetBuffer<BorderedRectangleData>(Renderer.DefaultAssets.BUF_BORDERED_RECTANGLE);
             indexBuffer = renderer.Assets.GetBuffer<ushort>(Renderer.DefaultAssets.BUF_QUAD_INDEX);
 
-            Rectangles = new List<(Vector2 position, float width, float height, float borderWidth,
-                float borderHeight, Color innerColor, Color borderColor)>();
+            this.Rectangles = Rectangles;
 
             em.addDraw2D(priority, Draw2D);
         }
@@ -58,30 +66,27 @@ namespace cylib
         void Draw2D()
         {
             shader.Bind(renderer.Context);
-            renderer.Context.VertexShader.SetShaderResource(0, circleBuf.srv);
+            renderer.Context.VertexShader.SetShaderResource(0, rectBuf.srv);
             renderer.Context.InputAssembler.SetIndexBuffer(indexBuffer.buf, Format.R16_UInt, 0);
 
             int index = 0;
 
-            while (index < Rectangles.Count)
+            foreach (var c in Rectangles)
             {
-                int loops = Math.Min(index + circleBuf.numElements, Rectangles.Count) - index;
+                rectBuf.dat[index++] = c;
 
-                for (int i = 0; i < loops; i++)
+                if (index == rectBuf.numElements)
                 {
-                    var r = Rectangles[i + index];
-                    circleBuf.dat[i].pos = r.position;
-                    circleBuf.dat[i].widthHeight = new Vector2(r.width, r.height);
-                    circleBuf.dat[i].borderWidthHeight = new Vector2(r.borderWidth, r.borderHeight);
-                    circleBuf.dat[i].innerColor = Texture.convertToLinear(r.innerColor);
-                    circleBuf.dat[i].borderColor = Texture.convertToLinear(r.borderColor);
+                    rectBuf.Write(renderer.Context, 0, index);
+                    renderer.Context.DrawIndexed(index * 6, 0, 0);
+                    index = 0;
                 }
+            }
 
-                circleBuf.Write(renderer.Context, 0, loops);
-
-                renderer.Context.DrawIndexed(loops * 6, 0, 0);
-
-                index += loops;
+            if (index != 0)
+            {
+                rectBuf.Write(renderer.Context, 0, index);
+                renderer.Context.DrawIndexed(index * 6, 0, 0);
             }
         }
 

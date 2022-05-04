@@ -12,30 +12,41 @@ using SharpDX.DXGI;
 namespace cylib
 {
     [StructLayout(LayoutKind.Explicit, Size = 48)]
-    struct BorderedCircleData
+    public struct BorderedCircleData
     {
         [FieldOffset(0)]
         public Vector2 pos;
         [FieldOffset(8)]
-        public Vector2 radiusBorder;
+        public float radius;
+        [FieldOffset(12)]
+        public float border;
         [FieldOffset(16)]
-        public Vector4 centerColor;
+        public Vector4 innerColor;
         [FieldOffset(32)]
         public Vector4 borderColor;
+
+        public BorderedCircleData(Vector2 pos, float radius, float border, Color innerColor, Color borderColor)
+        {
+            this.pos = pos;
+            this.radius = radius;
+            this.border = border;
+            this.innerColor = Texture.convertToLinear(innerColor);
+            this.borderColor = Texture.convertToLinear(borderColor);
+        }
     }
 
     public class BorderedCircles_2D : IDisposable
     {
-        public Shader shader;
-        private ConstBuffer<BorderedCircleData> circleBuf;
-        private ConstBuffer<ushort> indexBuffer;
+        Shader shader;
+        ConstBuffer<BorderedCircleData> circleBuf;
+        ConstBuffer<ushort> indexBuffer;
 
-        public List<(Vector2 position, float radius, float border, Color centerColor, Color borderColor)> Circles;
+        IEnumerable<BorderedCircleData> Circles;
 
         Renderer renderer;
         EventManager em;
 
-        public BorderedCircles_2D(Renderer renderer, EventManager em, int priority)
+        public BorderedCircles_2D(Renderer renderer, EventManager em, int priority, IEnumerable<BorderedCircleData> Circles)
         {
             this.renderer = renderer;
             this.em = em;
@@ -44,7 +55,7 @@ namespace cylib
             circleBuf = renderer.Assets.GetBuffer<BorderedCircleData>(Renderer.DefaultAssets.BUF_BORDERED_CIRCLE);
             indexBuffer = renderer.Assets.GetBuffer<ushort>(Renderer.DefaultAssets.BUF_QUAD_INDEX);
 
-            Circles = new List<(Vector2 position, float radius, float border, Color centerColor, Color borderColor)>();
+            this.Circles = Circles;
 
             em.addDraw2D(priority, Draw2D);
         }
@@ -57,24 +68,22 @@ namespace cylib
 
             int index = 0;
 
-            while (index < Circles.Count)
+            foreach (var c in Circles)
             {
-                int loops = Math.Min(index + circleBuf.numElements, Circles.Count) - index;
+                circleBuf.dat[index++] = c;
 
-                for (int i = 0; i < loops; i++)
+                if (index == circleBuf.numElements)
                 {
-                    var c = Circles[i + index];
-                    circleBuf.dat[i].pos = c.position;
-                    circleBuf.dat[i].radiusBorder = new Vector2(c.radius, c.border);
-                    circleBuf.dat[i].centerColor = Texture.convertToLinear(c.centerColor);
-                    circleBuf.dat[i].borderColor = Texture.convertToLinear(c.borderColor);
+                    circleBuf.Write(renderer.Context, 0, index);
+                    renderer.Context.DrawIndexed(index * 6, 0, 0);
+                    index = 0;
                 }
+            }
 
-                circleBuf.Write(renderer.Context, 0, loops);
-
-                renderer.Context.DrawIndexed(loops * 6, 0, 0);
-
-                index += loops;
+            if (index != 0)
+            {
+                circleBuf.Write(renderer.Context, 0, index);
+                renderer.Context.DrawIndexed(index * 6, 0, 0);
             }
         }
 
