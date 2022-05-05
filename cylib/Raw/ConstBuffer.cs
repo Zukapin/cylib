@@ -26,7 +26,7 @@ namespace cylib
         /// </summary>
         public readonly ShaderResourceView srv;
 
-        internal ConstBuffer(Renderer renderer, int numElements, ResourceUsage resUsage, BindFlags bindFlags, CpuAccessFlags cpuFlags, ResourceOptionFlags resOptFlags)
+        public ConstBuffer(Renderer renderer, int numElements, ResourceUsage resUsage, BindFlags bindFlags, CpuAccessFlags cpuFlags, ResourceOptionFlags resOptFlags)
         {
             this.numElements = numElements;
 
@@ -44,7 +44,7 @@ namespace cylib
                 throw new InvalidOperationException("Can't create a non-dynamic buffer inside of this constuctor");
         }
 
-        internal ConstBuffer(Renderer renderer, int numElements, ResourceUsage resUsage, BindFlags bindFlags, CpuAccessFlags cpuFlags, ResourceOptionFlags resOptFlags, T[] data)
+        public ConstBuffer(Renderer renderer, int numElements, ResourceUsage resUsage, BindFlags bindFlags, CpuAccessFlags cpuFlags, ResourceOptionFlags resOptFlags, T[] data)
         {
             this.numElements = numElements;
 

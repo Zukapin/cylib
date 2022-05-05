@@ -351,13 +351,22 @@ namespace cylib
         double timeLeftover = 0;
         Stopwatch frameTimer = new Stopwatch();
         bool StageExit = false;
-        public bool Update(double dt)
+        double frameDt;
+        public double FrameTimer
+        {
+            get
+            {
+                return frameDt;
+            }
+        }
+        public bool Update()
         {
             if (StageExit)
             {
                 return false;
             }
 
+            frameDt = frameTimer.Elapsed.TotalSeconds;
             frameTimer.Restart();
 
             input.Update();
@@ -367,7 +376,7 @@ namespace cylib
                 Logger.WriteLine(LogType.VERBOSE2, "Long input update detected: " + inputTime);
 
 #if DEBUG
-            timeLeftover += dt * DEBUG_TIDI;
+            timeLeftover += frameDt * DEBUG_TIDI;
 #else
             timeLeftover += dt;
 #endif
@@ -377,21 +386,21 @@ namespace cylib
                 int updatesThisFrame = 0;
                 while (timeLeftover > Timestep)
                 {
-                    frameTimer.Restart();
+                    var startFrame = frameTimer.Elapsed;
 
                     InternalUpdate(Timestep);
 
                     updatesThisFrame++;
                     timeLeftover -= Timestep;
 
-                    double updateTime = frameTimer.Elapsed.TotalMilliseconds;
+                    double updateTime = (startFrame - frameTimer.Elapsed).TotalMilliseconds;
                     if (updateTime > 16)
                         Logger.WriteLine(LogType.VERBOSE3, "Long update step detected: " + updateTime);
                 }
 
                 if (updatesThisFrame > 1)
                 {
-                    Logger.WriteLine(LogType.VERBOSE2, "Frame miss: " + updatesThisFrame + " " + dt);
+                    Logger.WriteLine(LogType.VERBOSE2, "Frame miss: " + updatesThisFrame + " " + frameDt);
                 }
             }
             else
