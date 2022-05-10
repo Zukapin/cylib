@@ -13,8 +13,16 @@ namespace cylib
         /// <summary>
         /// Called once around Load time.
         /// Scene must use the camera returned by this method for the entirety of the scene.
+        /// Camera used duing Draw3D and related methods.
         /// </summary>
-        ICamera GetCamera();
+        ICamera Get3DCamera();
+
+        /// <summary>
+        /// Called once around Load time.
+        /// Scene must use the camera returned by this method for the entirety of the scene.
+        /// Camera active during Draw2D methods.
+        /// </summary>
+        ICamera Get2DCamera();
 
         /// <summary>
         /// Should return the list of assets this scene is expecting to load.

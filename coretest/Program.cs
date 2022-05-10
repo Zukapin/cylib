@@ -24,7 +24,7 @@ namespace coretest
 
             stage.switchToScene(scene);
             
-            while (stage.Update(0.016667))
+            while (stage.Update())
             {
                 stage.Draw();
             }

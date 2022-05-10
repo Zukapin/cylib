@@ -90,7 +90,8 @@ namespace cylib
         EventManager sceneManager;
         #endregion
 
-        public ICamera cam;
+        ICamera cam3D;
+        ICamera cam2D;
 
         InputHandler input;
 
@@ -301,7 +302,8 @@ namespace cylib
             activeManager = loadManager;
             input.events = loadManager;
             renderer.Assets.PreLoad(loadAssets);
-            cam = scene.GetCamera();
+            cam3D = scene.Get3DCamera();
+            cam2D = scene.Get2DCamera();
             scene.Preload(loadManager);
 
             //now start the actual loading thread
@@ -453,15 +455,16 @@ namespace cylib
             renderer.Context.OutputMerger.SetTargets(depthDSV, colorRTV, normalRTV);
             renderer.Context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-            //Set 3D Camera
-            viewProjBuffer.dat[0].viewMatrix = cam.getViewMatrix();
-            viewProjBuffer.dat[0].projMatrix = cam.getProjMatrix();
-            viewProjBuffer.Write(renderer.Context);
-            renderer.Context.VertexShader.SetConstantBuffer(0, viewProjBuffer.buf);
 
             if (currentScene.Draw3D())
             {
-                viewProjInvBuffer.dat[0] = cam.getInvViewProjMatrix();
+                //Set 3D Camera
+                viewProjBuffer.dat[0].viewMatrix = cam3D.getViewMatrix();
+                viewProjBuffer.dat[0].projMatrix = cam3D.getProjMatrix();
+                viewProjBuffer.Write(renderer.Context);
+                renderer.Context.VertexShader.SetConstantBuffer(0, viewProjBuffer.buf);
+
+                viewProjInvBuffer.dat[0] = cam3D.getInvViewProjMatrix();
                 viewProjInvBuffer.Write(renderer.Context);
 
                 //MRT Draw
@@ -511,8 +514,13 @@ namespace cylib
 
             //2D Setup
             renderer.Context.OutputMerger.SetBlendState(renderer.blendTransparent, new SharpDX.Mathematics.Interop.RawColor4(1f, 1f, 1f, 1f), -1);
-            renderer.Context.VertexShader.SetConstantBuffer(0, fullscreenCameraBuffer);
             renderer.Context.OutputMerger.SetTargets(renderTarget);
+
+            //2D Camera
+            viewProjBuffer.dat[0].viewMatrix = cam2D.getViewMatrix();
+            viewProjBuffer.dat[0].projMatrix = cam2D.getProjMatrix();
+            viewProjBuffer.Write(renderer.Context);
+            renderer.Context.VertexShader.SetConstantBuffer(0, viewProjBuffer.buf);
 
             //Draw 2D here
             draw2D();
@@ -577,6 +585,8 @@ namespace cylib
 #if DEBUG
         void drawMRTOutput()
         {
+            renderer.Context.VertexShader.SetConstantBuffer(0, fullscreenCameraBuffer);
+
             renderer.Context.PixelShader.SetShaderResources(0, colorSRV, depthSRV, normalSRV, lightSRV);
             renderer.Context.InputAssembler.SetVertexBuffers(0, quad_postex_unit.vbBinding);
             renderer.Context.VertexShader.SetConstantBuffer(1, worldBuffer.buf);

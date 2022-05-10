@@ -172,7 +172,8 @@ namespace coretest
 
     class TestScene : IScene
     {
-        FPVCamera cam;
+        FPVCamera cam3D;
+        OrthoCamera cam2D;
 
         GameStage stage;
         Renderer renderer;
@@ -192,7 +193,8 @@ namespace coretest
             this.stage = stage;
             this.renderer = stage.renderer;
 
-            cam = new FPVCamera(stage.renderer.ResolutionWidth / (float)stage.renderer.ResolutionHeight, Vector3.UnitY, 0, 0);
+            cam3D = new FPVCamera(stage.renderer.ResolutionWidth / (float)stage.renderer.ResolutionHeight, Vector3.UnitY, 0, 0);
+            cam2D = new OrthoCamera(Vector2.Zero, stage.renderer.ResolutionWidth, stage.renderer.ResolutionHeight);
         }
 
         public float LoadTime()
@@ -270,7 +272,7 @@ namespace coretest
 
         public void Load(EventManager em)
         {
-            var player = new TestPlayer(stage, renderer, em, cam);
+            var player = new TestPlayer(stage, renderer, em, cam3D);
 
             Shader s_posTex = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_POS_TEX);
             Texture t_duck = renderer.Assets.GetTexture(Assets.TEX_DUCK);
@@ -619,9 +621,14 @@ namespace coretest
             }
         }
 
-        public ICamera GetCamera()
+        public ICamera Get3DCamera()
         {
-            return cam;
+            return cam3D;
+        }
+
+        public ICamera Get2DCamera()
+        {
+            return cam2D;
         }
 
         public void Dispose()
