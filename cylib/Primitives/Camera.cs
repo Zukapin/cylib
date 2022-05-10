@@ -11,7 +11,7 @@ using BepuUtilities;
 namespace cylib
 {
     [StructLayout(LayoutKind.Explicit, Size = 128)]
-    struct CameraBuffer
+    public struct CameraBuffer
     {
         [FieldOffset(0)]
         public Matrix viewMatrix;
