@@ -101,6 +101,9 @@ namespace cylib
             }
             set
             {
+                if (_mouseHover == value)
+                    return;
+
                 _mouseHover = value;
 
                 mouseHl.enabled = value >= 0 && isOpen;
@@ -153,11 +156,14 @@ namespace cylib
                 mouseHl.scale = labelFonts[mouseHover].boundsScale;
             }
 
-            scrollbar.Position = new Vector2(dropBg.position.X + scale.X - scale.Y * 3f / 4f, dropBg.position.Y + scale.Y / 4);
-            scrollbar.Scale = new Vector2(scale.Y / 2, dropBg.scale.Y - scale.Y / 2);
-            scrollbar.percentOfScreen = dropBg.scale.Y / getTotalDropHeight();
-            scrollbar.scrollPos = new Vector2(dropBg.position.X, dropBg.position.Y);
-            scrollbar.scrollScale = dropBg.scale;
+            if (getTotalDropHeight() > getMaxDropHeight())
+            {
+                scrollbar.Position = new Vector2(dropBg.position.X + scale.X - scale.Y * 3f / 4f, dropBg.position.Y + scale.Y / 4);
+                scrollbar.Scale = new Vector2(scale.Y / 2, dropBg.scale.Y - scale.Y / 2);
+                scrollbar.percentOfScreen = dropBg.scale.Y / getTotalDropHeight();
+                scrollbar.scrollPos = new Vector2(dropBg.position.X, dropBg.position.Y);
+                scrollbar.scrollScale = dropBg.scale;
+            }
         }
 
         float scrollAmount = 0;
@@ -188,7 +194,6 @@ namespace cylib
 
                 dropBg.enabled = value;
                 selHl.enabled = value;
-                scrollbar.enabled = value;
 
                 for (int i = 0; i < labelFonts.Length; i++)
                 {
@@ -200,15 +205,25 @@ namespace cylib
                     em.changePriority((int)InterfacePriority.HIGHEST, onPointerEvent);
 
                     //on open, set scroll amount so that we can see the selection
+                    if (getTotalDropHeight() > getMaxDropHeight())
+                    {
+                        scrollbar.enabled = true;
+                        scrollAmount = Math.Min(Math.Max(Selection * -scale.Y, scrollAmount), Selection * -scale.Y + dropBg.scale.Y - scale.Y);
+                        scrollbar.sliderPos = -scrollAmount / (getTotalDropHeight() - dropBg.scale.Y);
+                        recalcPositions();
+                    }
+                    else
+                    {
+                        scrollAmount = 0;
+                        recalcPositions();
+                    }
 
-                    scrollAmount = Math.Min(Math.Max(Selection * -scale.Y, scrollAmount), Selection * -scale.Y + dropBg.scale.Y - scale.Y);
-                    scrollbar.sliderPos = -scrollAmount / (getTotalDropHeight() - dropBg.scale.Y);
-                    recalcPositions();
                 }
                 else
                 {
                     em.changePriority((int)InterfacePriority.MEDIUM, onPointerEvent);
                     mouseHl.enabled = false;
+                    scrollbar.enabled = false;
                 }
             }
         }
@@ -219,7 +234,10 @@ namespace cylib
         Color mouseoverColor = Color.DarkBlue;
         Color highlighColor = Color.Blue;
 
-        public DropDownMenu(Renderer renderer, EventManager em, int priority, string[] labels, int initial)
+        float UIScaleX;
+        float UIScaleY;
+
+        public DropDownMenu(Renderer renderer, EventManager em, int priority, string[] labels, int initial, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
@@ -251,13 +269,13 @@ namespace cylib
             labelFonts = new FontRenderer[labels.Length];
             for (int i = 0; i < labelFonts.Length; i++)
             {
-                labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
+                labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT), UIScaleX, UIScaleY);
                 labelFonts[i].anchor = FontAnchor.CENTER_LEFT;
                 labelFonts[i].text = labels[i];
                 labelFonts[i].enabled = false;
             }
 
-            scrollbar = new ScrollBar(renderer, em, dropP + 1);
+            scrollbar = new ScrollBar(renderer, em, dropP + 1, UIScaleX, UIScaleY);
             scrollbar.enabled = false;
             scrollbar.defaultPriority = (int)InterfacePriority.HIGHEST - 1;
             scrollbar.selectedPriority = (int)InterfacePriority.HIGHEST - 2;
@@ -266,6 +284,9 @@ namespace cylib
             em.addEventHandler((int)InterfacePriority.MEDIUM, onPointerEvent);
 
             this.Selection = initial;
+
+            this.UIScaleX = UIScaleX < 0 ? renderer.ResolutionWidth : UIScaleX;
+            this.UIScaleY = UIScaleY < 0 ? renderer.ResolutionHeight : UIScaleY;
         }
 
         void onScrollChange(float val)
@@ -276,12 +297,15 @@ namespace cylib
 
         bool onPointerEvent(PointerEventArgs args)
         {
+            float mouseX = args.aimDeltaX * UIScaleX;
+            float mouseY = args.aimDeltaY * UIScaleY;
+
             if (args.type == PointerEventType.MOVE)
             {
                 if (!isOpen)
                 {
-                    if (args.x > pos.X && args.x <= pos.X + scale.X
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                    if (mouseX > pos.X && mouseX <= pos.X + scale.X
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {
                         rect.borderColor = highlighColor;
                     }
@@ -290,15 +314,15 @@ namespace cylib
                 }
                 else if (isOpen)
                 {//calc mouse highlight selection
-                    if (args.x > pos.X && args.x <= pos.X + scale.X - scale.Y
-                        && args.y > dropBg.position.Y && args.y <= dropBg.position.Y + dropBg.scale.Y)
+                    if (mouseX > pos.X && mouseX <= pos.X + scale.X - scale.Y
+                        && mouseY > dropBg.position.Y && mouseY <= dropBg.position.Y + dropBg.scale.Y)
                     {
                         for (int i = 0; i < labelFonts.Length; i++)
                         {
                             float ymin = labelFonts[i].boundsPos.Y;
                             float ymax = ymin + labelFonts[i].boundsScale.Y;
 
-                            if (args.y > ymin && args.y <= ymax)
+                            if (mouseY > ymin && mouseY <= ymax)
                             {
                                 mouseHover = i;
                                 return true;
@@ -318,8 +342,8 @@ namespace cylib
                 if (args.button == PointerButton.LEFT)
                 {
                     if (args.isDown
-                        && args.x > pos.X && args.x <= pos.X + scale.X
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                        && mouseX > pos.X && mouseX <= pos.X + scale.X
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {
                         if (!isOpen)
                         {
@@ -334,8 +358,8 @@ namespace cylib
                         return true;
                     }
                     else if (!args.isDown && isOpen
-                        && args.x > pos.X && args.x <= pos.X + scale.X
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                        && mouseX > pos.X && mouseX <= pos.X + scale.X
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {
                         return true;
                     }
@@ -345,15 +369,15 @@ namespace cylib
                         rect.borderColor = borderColor;
 
                         //check here for clicking on an option
-                        if (args.x > pos.X && args.x <= pos.X + scale.X - scale.Y
-                            && args.y > dropBg.position.Y && args.y <= dropBg.position.Y + dropBg.scale.Y)
+                        if (mouseX > pos.X && mouseX <= pos.X + scale.X - scale.Y
+                            && mouseY > dropBg.position.Y && mouseY <= dropBg.position.Y + dropBg.scale.Y)
                         {
                             for (int i = 0; i < labelFonts.Length; i++)
                             {
                                 float ymin = labelFonts[i].boundsPos.Y;
                                 float ymax = ymin + labelFonts[i].boundsScale.Y;
 
-                                if (args.y > ymin && args.y <= ymax)
+                                if (mouseY > ymin && mouseY <= ymax)
                                 {
                                     Selection = i;
                                     return true;
@@ -364,15 +388,15 @@ namespace cylib
                     }
                     else if (!args.isDown && isOpen)
                     {
-                        if (args.x > pos.X && args.x <= pos.X + scale.X - scale.Y
-                            && args.y > dropBg.position.Y && args.y <= dropBg.position.Y + dropBg.scale.Y)
+                        if (mouseX > pos.X && mouseX <= pos.X + scale.X - scale.Y
+                            && mouseY > dropBg.position.Y && mouseY <= dropBg.position.Y + dropBg.scale.Y)
                         {
                             for (int i = 0; i < labelFonts.Length; i++)
                             {
                                 float ymin = labelFonts[i].boundsPos.Y;
                                 float ymax = ymin + labelFonts[i].boundsScale.Y;
 
-                                if (args.y > ymin && args.y <= ymax)
+                                if (mouseY > ymin && mouseY <= ymax)
                                 {
                                     Selection = i;
                                     isOpen = false;

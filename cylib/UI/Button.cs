@@ -48,6 +48,9 @@ namespace cylib
             }
         }
 
+        private float UIScaleX;
+        private float UIScaleY;
+
         protected abstract void recalcPositions();
 
         bool _isPressed = false;
@@ -114,12 +117,15 @@ namespace cylib
         public event ButterInteractionEvent onPressed;
         public event ButtonClickEvent onClick;
 
-        public Button(Renderer renderer, EventManager em)
+        public Button(Renderer renderer, EventManager em, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
 
             em.addEventHandler((int)InterfacePriority.MEDIUM, onPointerEvent);
+
+            this.UIScaleX = UIScaleX < 0 ? renderer.ResolutionWidth : UIScaleX;
+            this.UIScaleY = UIScaleY < 0 ? renderer.ResolutionHeight : UIScaleY;
         }
 
         bool onPointerEvent(PointerEventArgs args)
@@ -127,13 +133,16 @@ namespace cylib
             if (!_isEnabled)
                 return false;
 
+            float mouseX = args.aimDeltaX * UIScaleX;
+            float mouseY = args.aimDeltaY * UIScaleY;
+
             if (args.type == PointerEventType.MOVE)
             {
                 if (isPressed)
                     return true;
 
-                isMouseOver = (args.x > pos.X && args.x <= pos.X + scale.X
-                    && args.y > pos.Y && args.y <= pos.Y + scale.Y);
+                isMouseOver = (mouseX > pos.X && mouseX <= pos.X + scale.X
+                    && mouseY > pos.Y && mouseY <= pos.Y + scale.Y);
 
                 return false;
             }
@@ -143,16 +152,16 @@ namespace cylib
                 if (args.button == PointerButton.LEFT)
                 {
                     if (args.isDown
-                        && args.x > pos.X && args.x <= pos.X + scale.X
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                        && mouseX > pos.X && mouseX <= pos.X + scale.X
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {
                         isPressed = true;
                         return true;
                     }
                     else if (!args.isDown && isPressed)
                     {
-                        if (args.x > pos.X && args.x <= pos.X + scale.X
-                            && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                        if (mouseX > pos.X && mouseX <= pos.X + scale.X
+                            && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                         {
                             if (onClick != null)
                                 onClick(this);

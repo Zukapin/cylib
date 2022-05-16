@@ -127,7 +127,10 @@ namespace cylib
 
         public SliderEvent onValueChanged;
 
-        public Slider(Renderer renderer, EventManager em, int priority, float minValue, float startValue, float maxValue)
+        float UIScaleX;
+        float UIScaleY;
+
+        public Slider(Renderer renderer, EventManager em, int priority, float minValue, float startValue, float maxValue, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
@@ -149,21 +152,27 @@ namespace cylib
             em.addEventHandler((int)InterfacePriority.MEDIUM, onPointerEvent);
 
             sliderPos = (startValue - minValue) / (maxValue - minValue);
+
+            this.UIScaleX = UIScaleX < 0 ? renderer.ResolutionWidth : UIScaleX;
+            this.UIScaleY = UIScaleY < 0 ? renderer.ResolutionHeight : UIScaleY;
         }
 
         bool onPointerEvent(PointerEventArgs args)
         {
+            float mouseX = args.aimDeltaX * UIScaleX;
+            float mouseY = args.aimDeltaY * UIScaleY;
+
             if (args.type == PointerEventType.MOVE)
             {
                 if (isDragging)
                 {
-                    sliderPos = (args.x - pos.X) / scale.X;
+                    sliderPos = (mouseX - pos.X) / scale.X;
                     return true;
                 }
                 else
                 {
-                    if (args.x > pos.X - point.scale.X / 2 && args.x <= pos.X + scale.X + point.scale.X / 2
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                    if (mouseX > pos.X - point.scale.X / 2 && mouseX <= pos.X + scale.X + point.scale.X / 2
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {//mouseOver
                         bar.borderColor = mouseoverColor;
                     }
@@ -179,11 +188,11 @@ namespace cylib
                 if (args.button == PointerButton.LEFT)
                 {
                     if (args.isDown
-                        && args.x > pos.X - point.scale.X / 2 && args.x <= pos.X + scale.X + point.scale.X / 2
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                        && mouseX > pos.X - point.scale.X / 2 && mouseX <= pos.X + scale.X + point.scale.X / 2
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {
                         isDragging = true;
-                        sliderPos = (args.x - pos.X) / scale.X;
+                        sliderPos = (mouseX - pos.X) / scale.X;
 
                         point.borderColor = mouseoverColor;
                         point.mainColor = highlightColor;
@@ -193,7 +202,7 @@ namespace cylib
                     else if (!args.isDown && isDragging)
                     {
                         isDragging = false;
-                        sliderPos = (args.x - pos.X) / scale.X;
+                        sliderPos = (mouseX - pos.X) / scale.X;
 
                         point.borderColor = baseColor;
                         point.mainColor = bgColor;

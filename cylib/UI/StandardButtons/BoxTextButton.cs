@@ -115,8 +115,8 @@ namespace cylib
             }
         }
 
-        public BoxTextButton(Renderer renderer, EventManager em, int priority, string text)
-            : base(renderer, em)
+        public BoxTextButton(Renderer renderer, EventManager em, int priority, string text, float UIScaleX = -1, float UIScaleY = -1)
+            : base(renderer, em, UIScaleX, UIScaleY)
         {
             rect = new RoundedRectangle_2D(renderer, em, priority);
             rect.borderColor = baseColor;

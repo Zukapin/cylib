@@ -55,15 +55,19 @@ namespace cylib
 #endif
         #endregion
         #region Render Targets
+        Texture2D depthTarget;
         ShaderResourceView depthSRV;
         DepthStencilView depthDSV;
 
+        Texture2D colorTarget;
         ShaderResourceView colorSRV;
         RenderTargetView colorRTV;
 
+        Texture2D normalTarget;
         ShaderResourceView normalSRV;
         RenderTargetView normalRTV;
 
+        Texture2D lightTarget;
         ShaderResourceView lightSRV;
         RenderTargetView lightRTV;
         #endregion
@@ -101,7 +105,8 @@ namespace cylib
         Thread loadingThread;
 
         public readonly Renderer renderer;
-        public readonly RenderTargetView renderView;
+        private Texture2D SwapChainBackBuffer;
+        public RenderTargetView renderView;
 
         public GameStage(Renderer renderer, string actionFile)
         {
@@ -115,99 +120,8 @@ namespace cylib
             activeManager = sceneManager;
             input.events = activeManager;
 
-            var backBuffer = Resource.FromSwapChain<Texture2D>(renderer.SwapChain, 0);
-            renderView = new RenderTargetView(renderer.Device, backBuffer, 
-                new RenderTargetViewDescription() 
-                { 
-                    Format = Format.R8G8B8A8_UNorm_SRgb,
-                    Dimension = RenderTargetViewDimension.Texture2D,
-                });
-
             loadAssets(null); //load starting assets
-            #region Load Render Targets
-            Texture2D depthTarget = new Texture2D(renderer.Device, new Texture2DDescription()
-            {
-                Format = Format.R32_Typeless,
-                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                Width = renderer.ResolutionWidth,
-                Height = renderer.ResolutionHeight,
-                MipLevels = 1,
-                ArraySize = 1,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default,
-                SampleDescription = new SampleDescription(1, 0)
-            });
-
-            depthSRV = new ShaderResourceView(renderer.Device, depthTarget, new ShaderResourceViewDescription()
-            {
-                Format = Format.R32_Float,
-                Dimension = ShaderResourceViewDimension.Texture2D,
-                Texture2D = { MostDetailedMip = 0, MipLevels = 1 }
-
-            });
-            depthDSV = new DepthStencilView(renderer.Device, depthTarget, new DepthStencilViewDescription()
-            {
-                Flags = DepthStencilViewFlags.None,
-                Format = Format.D32_Float,
-                Dimension = DepthStencilViewDimension.Texture2D,
-                Texture2D = { MipSlice = 0 }
-            });
-
-
-            Texture2D colorTarget = new Texture2D(renderer.Device, new Texture2DDescription()
-            {
-                Format = Format.R8G8B8A8_UNorm,
-                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-                Width = renderer.ResolutionWidth,
-                Height = renderer.ResolutionHeight,
-                MipLevels = 1,
-                ArraySize = 1,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default,
-                SampleDescription = new SampleDescription(1, 0)
-            });
-
-            colorSRV = new ShaderResourceView(renderer.Device, colorTarget);
-            colorRTV = new RenderTargetView(renderer.Device, colorTarget);
-
-
-            Texture2D normalTarget = new Texture2D(renderer.Device, new Texture2DDescription()
-            {
-                Format = Format.R16G16_Float,
-                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-                Width = renderer.ResolutionWidth,
-                Height = renderer.ResolutionHeight,
-                MipLevels = 1,
-                ArraySize = 1,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default,
-                SampleDescription = new SampleDescription(1, 0)
-            });
-
-            normalSRV = new ShaderResourceView(renderer.Device, normalTarget);
-            normalRTV = new RenderTargetView(renderer.Device, normalTarget);
-
-
-            Texture2D lightTarget = new Texture2D(renderer.Device, new Texture2DDescription()
-            {
-                Format = Format.R8G8B8A8_UNorm,
-                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-                Width = renderer.ResolutionWidth,
-                Height = renderer.ResolutionHeight,
-                MipLevels = 1,
-                ArraySize = 1,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default,
-                SampleDescription = new SampleDescription(1, 0)
-            });
-
-            lightSRV = new ShaderResourceView(renderer.Device, lightTarget);
-            lightRTV = new RenderTargetView(renderer.Device, lightTarget);
-            #endregion
+            LoadRenderTargets();
             #region Buffer Setup
             {
                 fullscreenCameraBuffer = new Buffer(renderer.Device,
@@ -255,6 +169,153 @@ namespace cylib
                 IsDepthEnabled = true
             });
             #endregion
+        }
+
+        public void ChangeResolution(int NewResX, int NewResY)
+        {
+            renderView.Dispose();
+            renderView = null;
+            SwapChainBackBuffer.Dispose();
+            SwapChainBackBuffer = null;
+
+            renderer.ChangeResolution(NewResX, NewResY);
+            OnResolutionChange();
+        }
+
+        private void OnResolutionChange()
+        {
+            LoadRenderTargets();
+
+            CameraBuffer fs = new CameraBuffer();
+            fs.viewMatrix = Matrix.Identity;
+            Matrix.CreateOrthographic(0.0f, renderer.ResolutionWidth, renderer.ResolutionHeight, 0.0f, 0.0f, 1.0f, out fs.projMatrix);
+
+            updateSubresource(fullscreenCameraBuffer, fs);
+        }
+
+        private void LoadRenderTargets()
+        {
+            if (SwapChainBackBuffer != null)
+                SwapChainBackBuffer.Dispose();
+            SwapChainBackBuffer = Resource.FromSwapChain<Texture2D>(renderer.SwapChain, 0);
+
+            if (renderView != null)
+                renderView.Dispose();
+            renderView = new RenderTargetView(renderer.Device, SwapChainBackBuffer,
+                new RenderTargetViewDescription()
+                {
+                    Format = Format.R8G8B8A8_UNorm_SRgb,
+                    Dimension = RenderTargetViewDimension.Texture2D,
+                });
+
+            if (depthTarget != null)
+                depthTarget.Dispose();
+
+            depthTarget = new Texture2D(renderer.Device, new Texture2DDescription()
+            {
+                Format = Format.R32_Typeless,
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
+                MipLevels = 1,
+                ArraySize = 1,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None,
+                Usage = ResourceUsage.Default,
+                SampleDescription = new SampleDescription(1, 0)
+            });
+
+            if (depthSRV != null)
+                depthSRV.Dispose();
+            depthSRV = new ShaderResourceView(renderer.Device, depthTarget, new ShaderResourceViewDescription()
+            {
+                Format = Format.R32_Float,
+                Dimension = ShaderResourceViewDimension.Texture2D,
+                Texture2D = { MostDetailedMip = 0, MipLevels = 1 }
+
+            });
+
+            if (depthDSV != null)
+                depthDSV.Dispose();
+            depthDSV = new DepthStencilView(renderer.Device, depthTarget, new DepthStencilViewDescription()
+            {
+                Flags = DepthStencilViewFlags.None,
+                Format = Format.D32_Float,
+                Dimension = DepthStencilViewDimension.Texture2D,
+                Texture2D = { MipSlice = 0 }
+            });
+
+            if (colorTarget != null)
+                colorTarget.Dispose();
+            colorTarget = new Texture2D(renderer.Device, new Texture2DDescription()
+            {
+                Format = Format.R8G8B8A8_UNorm,
+                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
+                MipLevels = 1,
+                ArraySize = 1,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None,
+                Usage = ResourceUsage.Default,
+                SampleDescription = new SampleDescription(1, 0)
+            });
+
+            if (colorSRV != null)
+                colorSRV.Dispose();
+            colorSRV = new ShaderResourceView(renderer.Device, colorTarget);
+
+            if (colorRTV != null)
+                colorRTV.Dispose();
+            colorRTV = new RenderTargetView(renderer.Device, colorTarget);
+
+            if (normalTarget != null)
+                normalTarget.Dispose();
+            normalTarget = new Texture2D(renderer.Device, new Texture2DDescription()
+            {
+                Format = Format.R16G16_Float,
+                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
+                MipLevels = 1,
+                ArraySize = 1,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None,
+                Usage = ResourceUsage.Default,
+                SampleDescription = new SampleDescription(1, 0)
+            });
+
+            if (normalSRV != null)
+                normalSRV.Dispose();
+            normalSRV = new ShaderResourceView(renderer.Device, normalTarget);
+
+            if (normalRTV != null)
+                normalRTV.Dispose();
+            normalRTV = new RenderTargetView(renderer.Device, normalTarget);
+
+            if (lightTarget != null)
+                lightTarget.Dispose();
+            lightTarget = new Texture2D(renderer.Device, new Texture2DDescription()
+            {
+                Format = Format.R8G8B8A8_UNorm,
+                BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+                Width = renderer.ResolutionWidth,
+                Height = renderer.ResolutionHeight,
+                MipLevels = 1,
+                ArraySize = 1,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None,
+                Usage = ResourceUsage.Default,
+                SampleDescription = new SampleDescription(1, 0)
+            });
+
+            if (lightSRV != null)
+                lightSRV.Dispose();
+            lightSRV = new ShaderResourceView(renderer.Device, lightTarget);
+
+            if (lightRTV != null)
+                lightRTV.Dispose();
+            lightRTV = new RenderTargetView(renderer.Device, lightTarget);
         }
 
         private HashSet<string> GetOurAssets()

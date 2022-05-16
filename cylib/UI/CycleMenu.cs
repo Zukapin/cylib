@@ -102,7 +102,7 @@ namespace cylib
         BoxTextButton leftButton;
         BoxTextButton rightButton;
 
-        public CycleMenu(Renderer renderer, EventManager em, int priority, string[] labels, int initial)
+        public CycleMenu(Renderer renderer, EventManager em, int priority, string[] labels, int initial, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
@@ -116,10 +116,10 @@ namespace cylib
             font.color = fontColor;
             font.anchor = FontAnchor.CENTER_CENTER;
 
-            leftButton = new BoxTextButton(renderer, em, priority + 1, "<");
+            leftButton = new BoxTextButton(renderer, em, priority + 1, "<", UIScaleX, UIScaleY);
             leftButton.drawBackground = false;
 
-            rightButton = new BoxTextButton(renderer, em, priority + 1, ">");
+            rightButton = new BoxTextButton(renderer, em, priority + 1, ">", UIScaleX, UIScaleY);
             rightButton.drawBackground = false;
 
             leftButton.onClick += onLeftClick;

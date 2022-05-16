@@ -420,6 +420,21 @@ namespace cylib
 #endregion
         }
 
+        internal void ChangeResolution(int NewResX, int NewResY)
+        {
+            SDL.SDL_SetWindowSize(window.Handle, NewResX, NewResY);
+            ResolutionChanged();
+        }
+
+        private void ResolutionChanged()
+        {
+            SDL.SDL_GetWindowSize(window.Handle, out int winWidth, out int winHeight);
+            resWidth = winWidth;
+            resHeight = winHeight;
+
+            swapChain.ResizeBuffers(2, winWidth, winHeight, Format.Unknown, SwapChainFlags.None);
+        }
+
         public void Dispose()
         {//I dont actually know what this needs to do
             context.Dispose();

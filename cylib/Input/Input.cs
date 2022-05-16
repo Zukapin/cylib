@@ -154,11 +154,13 @@ namespace cylib
 
         /// <summary>
         /// The amount the pointer moved horizontally during an aim event, as a percentage of the screen.
+        /// OR the hoirzontal mouse position as a percentage of the screen during a move or button event.
         /// </summary>
         public readonly float aimDeltaX;
 
         /// <summary>
         /// The amount the pointer moved vertically during an aim event, as a percentage of the screen.
+        /// OR the vertical mouse position as a percentage of the screen during a move or button event.
         /// </summary>
         public readonly float aimDeltaY;
 
@@ -259,7 +261,7 @@ namespace cylib
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEMOTION:
                         if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
-                            onPointerMovement(ev.motion.x, ev.motion.y, true);
+                            onPointerMovement(ev.motion.x, ev.motion.y, ev.motion.x / (float)stage.renderer.ResolutionWidth, ev.motion.y / (float)stage.renderer.ResolutionHeight, true);
                         else
                             onPointerAim(ev.motion.xrel / (float)stage.renderer.ResolutionWidth, ev.motion.yrel / (float)stage.renderer.ResolutionHeight, true);
                         break;
@@ -276,20 +278,24 @@ namespace cylib
                                 dy *= -1;
                             }
 
-                            onPointerMousewheel(mouseX, mouseY, dx, dy, true);
+                            onPointerMousewheel(mouseX, mouseY, dx, dy, mouseX / (float)stage.renderer.ResolutionWidth, mouseY / (float)stage.renderer.ResolutionHeight, true);
                         }
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
                         if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
-                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, true);
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, true,
+                                ev.button.x / (float)stage.renderer.ResolutionWidth, ev.button.y / (float)stage.renderer.ResolutionHeight);
                         else
-                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, false);
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, true, true, false,
+                                ev.button.x / (float)stage.renderer.ResolutionWidth, ev.button.y / (float)stage.renderer.ResolutionHeight);
                         break;
                     case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                         if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_FALSE)
-                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true, true);
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true, true,
+                                ev.button.x / (float)stage.renderer.ResolutionWidth, ev.button.y / (float)stage.renderer.ResolutionHeight);
                         else
-                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true, false);
+                            onPointerButton((PointerButton)ev.button.button, ev.button.x, ev.button.y, false, true, false,
+                                ev.button.x / (float)stage.renderer.ResolutionWidth, ev.button.y / (float)stage.renderer.ResolutionHeight);
                         break;
                     case SDL.SDL_EventType.SDL_QUIT:
                         stage.Exit();
@@ -367,9 +373,9 @@ namespace cylib
         }
         */
 
-        private void onPointerMovement(int posX, int posY, bool focus)
+        private void onPointerMovement(int posX, int posY, float relX, float relY, bool focus)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOVE, posX, posY, PointerButton.NONE, false, 0, 0, 0, 0, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOVE, posX, posY, PointerButton.NONE, false, 0, 0, relX, relY, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
                 if (e(args))
@@ -377,9 +383,9 @@ namespace cylib
             }
         }
 
-        private void onPointerMousewheel(int posX, int posY, int deltaX, int deltaY, bool focus)
+        private void onPointerMousewheel(int posX, int posY, int deltaX, int deltaY, float relX, float relY, bool focus)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOUSEWHEEL, posX, posY, PointerButton.NONE, false, deltaX, deltaY, 0, 0, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.MOUSEWHEEL, posX, posY, PointerButton.NONE, false, deltaX, deltaY, relX, relY, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
                 if (e(args))
@@ -387,9 +393,9 @@ namespace cylib
             }
         }
 
-        private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus, bool mouseVisible)
+        private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus, bool mouseVisible, float relX, float relY)
         {
-            PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, 0, 0, focus);
+            PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, relX, relY, focus);
             bool hasAction = map.TryGetAction(button, out var actionMap);
             if (hasAction && actionMap.IsFired == isDown)
                 hasAction = false;

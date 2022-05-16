@@ -135,7 +135,10 @@ namespace cylib
         public event TextboxEnter onEnterPressed;
         public event TextboxEnter onTextChanged;
 
-        public Textbox(Renderer renderer, EventManager em, int priority)
+        float UIScaleX;
+        float UIScaleY;
+
+        public Textbox(Renderer renderer, EventManager em, int priority, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
@@ -146,7 +149,7 @@ namespace cylib
             bg.borderColor = outlineColor;
             bg.borderThickness = 1f;
 
-            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
+            font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT), UIScaleX, UIScaleY);
             font.anchor = FontAnchor.CENTER_LEFT;
             font.color = fontColor;
 
@@ -158,10 +161,16 @@ namespace cylib
 
             em.addEventHandler((int)InterfacePriority.MEDIUM, onPointerEvent);
             em.addUpdateListener(priority, Update);
+
+            this.UIScaleX = UIScaleX < 0 ? renderer.ResolutionWidth : UIScaleX;
+            this.UIScaleY = UIScaleY < 0 ? renderer.ResolutionHeight : UIScaleY;
         }
 
         bool onPointerEvent(PointerEventArgs args)
         {
+            float mouseX = args.aimDeltaX * UIScaleX;
+            float mouseY = args.aimDeltaY * UIScaleY;
+
             if (args.type == PointerEventType.MOVE)
             {
                 if (mouseSelectingStuff)
@@ -174,7 +183,7 @@ namespace cylib
                     {
                         float xpos = font.pos.X + font.offset.X + font.getRenderWidth(text.Substring(0, i));
 
-                        if (args.x < xpos)
+                        if (mouseX < xpos)
                         {
                             s = i - 1;
                             break;
@@ -186,8 +195,8 @@ namespace cylib
                     calcCursorPosition();
                     return true;
                 }
-                if (args.x > pos.X && args.x <= pos.X + scale.X
-                    && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                if (mouseX > pos.X && mouseX <= pos.X + scale.X
+                    && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                 {//mouseOver
                     if (!isTyping)
                         bg.mainColor = activeColor;
@@ -203,8 +212,8 @@ namespace cylib
                 if (args.button == PointerButton.LEFT)
                 {
                     if (args.isDown
-                        && args.x > pos.X && args.x <= pos.X + scale.X
-                        && args.y > pos.Y && args.y <= pos.Y + scale.Y)
+                        && mouseX > pos.X && mouseX <= pos.X + scale.X
+                        && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                     {//mouse down
                         isTyping = true;
                         mouseSelectingStuff = true;
@@ -219,7 +228,7 @@ namespace cylib
                         {
                             float xpos = font.pos.X + font.offset.X + font.getRenderWidth(text.Substring(0, i));
 
-                            if (args.x < xpos)
+                            if (mouseX < xpos)
                             {
                                 selPosition = i - 1;
                                 break;
@@ -247,7 +256,7 @@ namespace cylib
                         {
                             float xpos = font.pos.X + font.offset.X + font.getRenderWidth(text.Substring(0, i));
 
-                            if (args.x < xpos)
+                            if (mouseX < xpos)
                             {
                                 s = i - 1;
                                 break;

@@ -102,7 +102,10 @@ namespace cylib
         Renderer renderer;
         EventManager em;
 
-        public FontRenderer(Renderer renderer, EventManager em, int priority, Font font)
+        float UIScaleX;
+        float UIScaleY;
+
+        public FontRenderer(Renderer renderer, EventManager em, int priority, Font font, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
@@ -125,6 +128,9 @@ namespace cylib
             boundsScale = new Vector2(-1, -1);
 
             em.addDraw2D(priority, Draw2D);
+
+            this.UIScaleX = UIScaleX < 0 ? renderer.ResolutionWidth : UIScaleX;
+            this.UIScaleY = UIScaleY < 0 ? renderer.ResolutionHeight : UIScaleY;
         }
 
         void Draw2D()
@@ -149,7 +155,11 @@ namespace cylib
             if (boundsScale.X > 0 && boundsScale.Y > 0)
             {
                 renderer.Context.Rasterizer.State = renderer.rasterNormalScissor;
-                renderer.Context.Rasterizer.SetScissorRectangle((int)boundsPos.X, (int)boundsPos.Y, (int)Math.Ceiling(boundsPos.X + boundsScale.X), (int)Math.Ceiling(boundsPos.Y + boundsScale.Y));
+                renderer.Context.Rasterizer.SetScissorRectangle(
+                    (int)(boundsPos.X / UIScaleX * renderer.ResolutionWidth), 
+                    (int)(boundsPos.Y / UIScaleY * renderer.ResolutionHeight), 
+                    (int)Math.Ceiling((boundsPos.X + boundsScale.X) / UIScaleX * renderer.ResolutionWidth), 
+                    (int)Math.Ceiling((boundsPos.Y + boundsScale.Y) / UIScaleY * renderer.ResolutionHeight));
             }
 
             int index = 0;
