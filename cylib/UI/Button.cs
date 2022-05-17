@@ -160,6 +160,8 @@ namespace cylib
                     }
                     else if (!args.isDown && isPressed)
                     {
+                        isPressed = false;
+
                         if (mouseX > pos.X && mouseX <= pos.X + scale.X
                             && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                         {
@@ -167,7 +169,6 @@ namespace cylib
                                 onClick(this);
                         }
 
-                        isPressed = false;
                         return true;
                     }
                 }

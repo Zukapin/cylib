@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using SDL2;
 using Scancode = SDL2.SDL.SDL_Scancode;
@@ -191,18 +192,28 @@ namespace cylib
     {
         GameStage stage;
         ActionMapper map;
-        public EventManager events; //should be set by stage during constructor, then updated however
+        internal EventManager events; //should be set by stage during constructor, then updated however
+
+        public ActionMapper ActionMap
+        {
+            get
+            {
+                return map;
+            }
+        }
 
         private OnTextInput activeTextbox;
 
-        public InputHandler(GameStage stage, string actionFile)
+        public InputHandler(GameStage stage, IEnumerable<ActionInformation> SupportedActions, string ActionBindings)
         {
             this.stage = stage;
-            map = new ActionMapper(this, actionFile);
+            map = new ActionMapper(SupportedActions, ActionBindings);
             SDL.SDL_StopTextInput(); //for some reason sdl defaults text input to on
         }
 
         int prevMouseX, prevMouseY;
+        int mouseX, mouseY;
+        float relMouseX, relMouseY;
         public void EnterFPVMode()
         {
             if (SDL.SDL_GetRelativeMouseMode() == SDL.SDL_bool.SDL_TRUE)
@@ -229,19 +240,22 @@ namespace cylib
             SDL.SDL_SetWindowGrab(stage.renderer.window.Handle, SDL.SDL_bool.SDL_FALSE);
         }
 
-        internal void StartTyping(OnTextInput callback)
+        public void StartTyping(OnTextInput callback)
         {
+            if (activeTextbox != null)
+                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Calling StartTyping when Typing is already active? Did you forget a StopTyping call?");
+
             activeTextbox = callback;
             SDL.SDL_StartTextInput();
         }
 
-        internal void StopTyping()
+        public void StopTyping()
         {
             activeTextbox = null;
             SDL.SDL_StopTextInput();
         }
 
-        public void Update()
+        internal void Update()
         {
             while (SDL.SDL_PollEvent(out SDL.SDL_Event ev) != 0)
             {
@@ -375,6 +389,11 @@ namespace cylib
 
         private void onPointerMovement(int posX, int posY, float relX, float relY, bool focus)
         {
+            mouseX = posX;
+            mouseY = posY;
+            relMouseX = relX;
+            relMouseY = relY;
+
             PointerEventArgs args = new PointerEventArgs(PointerEventType.MOVE, posX, posY, PointerButton.NONE, false, 0, 0, relX, relY, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
@@ -385,6 +404,11 @@ namespace cylib
 
         private void onPointerMousewheel(int posX, int posY, int deltaX, int deltaY, float relX, float relY, bool focus)
         {
+            mouseX = posX;
+            mouseY = posY;
+            relMouseX = relX;
+            relMouseY = relY;
+
             PointerEventArgs args = new PointerEventArgs(PointerEventType.MOUSEWHEEL, posX, posY, PointerButton.NONE, false, deltaX, deltaY, relX, relY, focus);
             foreach (OnPointerChange e in events.pointerChangeList)
             {
@@ -395,6 +419,11 @@ namespace cylib
 
         private void onPointerButton(PointerButton button, int posX, int posY, bool isDown, bool focus, bool mouseVisible, float relX, float relY)
         {
+            mouseX = posX;
+            mouseY = posY;
+            relMouseX = relX;
+            relMouseY = relY;
+
             PointerEventArgs args = new PointerEventArgs(PointerEventType.BUTTON, posX, posY, button, isDown, 0, 0, relX, relY, focus);
             bool hasAction = map.TryGetAction(button, out var actionMap);
             if (hasAction && actionMap.IsFired == isDown)
@@ -402,7 +431,7 @@ namespace cylib
 
             ActionEventArgs actionArgs = new ActionEventArgs();
             if (hasAction)
-                actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.MOUSE_BUTTON, isDown, posX, posY);
+                actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.MOUSE_BUTTON, isDown, posX, posY, relX, relY);
 
             if (!hasAction && mouseVisible)
             {
@@ -474,7 +503,7 @@ namespace cylib
             }
             else
             {
-                var actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.BUTTON, isDown, 0, 0);
+                var actionArgs = new ActionEventArgs(actionMap.Name, FiredBy.BUTTON, isDown, mouseX, mouseY, relMouseX, relMouseY);
                 foreach (Pair<OnKeyChange, OnAction> p in events.KeyActionList(actionMap.Name))
                 {
                     if (p.hasVal1)
@@ -491,33 +520,6 @@ namespace cylib
                         }
                     }
                 }
-            }
-        }
-
-        internal void onBindingChange(Scancode k, KeyMap keyData, bool isBound)
-        {
-            //if the action was fired but not released, might want to call the release event
-            //... can that even happen?
-            //otherwise I'm not sure why this exists
-            if (isBound)
-            {
-                Logger.WriteLine(LogType.VERBOSE, "Key binding added. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
-            }
-            else
-            {
-                Logger.WriteLine(LogType.VERBOSE, "Key binding removed. Bind: " + keyData.GetBindDisplay(k) + " Action: " + keyData.Name);
-            }
-        }
-
-        internal void onBindingChange(PointerButton k, PointerMap pointerData, bool isBound)
-        {
-            if (isBound)
-            {
-                Logger.WriteLine(LogType.VERBOSE, "Pointer binding added. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
-            }
-            else
-            {
-                Logger.WriteLine(LogType.VERBOSE, "Pointer binding removed. Bind: " + pointerData.GetBindDisplay(k) + " Action: " + pointerData.Name);
             }
         }
     }

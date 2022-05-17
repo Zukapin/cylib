@@ -31,6 +31,7 @@ namespace cylib
 
         Renderer renderer;
         EventManager em;
+        InputHandler input;
         RoundedRectangle_2D bg;
         RoundedRectangle_2D selCursor;
 
@@ -95,13 +96,13 @@ namespace cylib
                 {
                     bg.mainColor = activeColor;
                     em.addEventHandler((int)InterfacePriority.HIGHEST, onKeyChange);
-                    em.StartTyping(OnText);
+                    input.StartTyping(OnText);
                 }
                 else
                 {
                     bg.mainColor = bgColor;
                     em.removeEventHandler(onKeyChange);
-                    em.StopTyping();
+                    input.StopTyping();
                 }
             }
         }
@@ -138,10 +139,11 @@ namespace cylib
         float UIScaleX;
         float UIScaleY;
 
-        public Textbox(Renderer renderer, EventManager em, int priority, float UIScaleX = -1, float UIScaleY = -1)
+        public Textbox(Renderer renderer, EventManager em, InputHandler input, int priority, float UIScaleX = -1, float UIScaleY = -1)
         {
             this.renderer = renderer;
             this.em = em;
+            this.input = input;
 
             bg = new RoundedRectangle_2D(renderer, em, priority);
             bg.radius = 4f;

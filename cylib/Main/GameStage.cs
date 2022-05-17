@@ -99,6 +99,14 @@ namespace cylib
 
         InputHandler input;
 
+        public InputHandler Input
+        {
+            get
+            {
+                return input;
+            }
+        }
+
         IScene currentScene;
 
         float loadingTime = 0;
@@ -108,14 +116,14 @@ namespace cylib
         private Texture2D SwapChainBackBuffer;
         public RenderTargetView renderView;
 
-        public GameStage(Renderer renderer, string actionFile)
+        public GameStage(Renderer renderer, IEnumerable<ActionInformation> SupportedActions, string ActionBindingsFile)
         {
             this.renderer = renderer;
 
-            input = new InputHandler(this, actionFile);
+            input = new InputHandler(this, SupportedActions, ActionBindingsFile);
 
-            loadManager = new EventManager(input);
-            sceneManager = new EventManager(input);
+            loadManager = new EventManager();
+            sceneManager = new EventManager();
 
             activeManager = sceneManager;
             input.events = activeManager;
@@ -367,10 +375,20 @@ namespace cylib
             cam2D = scene.Get2DCamera();
             scene.Preload(loadManager);
 
-            //now start the actual loading thread
-            loadingTime = 0;
-            loadingThread = new Thread(new ThreadStart(LoadThread));
-            loadingThread.Start();
+            if (!renderer.Assets.LoadHasWorkToDo(assets, loadAssets))
+            {//if we don't actually need to do any asset management, just singlethread it
+                //may want to create an override for this to force running the load thread
+                //for scenes with heavy work in their Load method
+                StartLoad(assets, loadAssets);
+                FinishLoad(assets, loadAssets);
+            }
+            else
+            {
+                //now start the actual loading thread
+                loadingTime = 0;
+                loadingThread = new Thread(new ThreadStart(LoadThread));
+                loadingThread.Start();
+            }
         }
 
         private void LoadThread()
@@ -380,16 +398,24 @@ namespace cylib
             loadAssets.UnionWith(currentScene.GetPreloadAssetList());
             assets.UnionWith(currentScene.GetAssetList());
 
+            StartLoad(assets, loadAssets);
+        }
+
+        private void StartLoad(HashSet<string> assets, HashSet<string> loadAssets)
+        {
             renderer.Assets.StartLoad(assets, loadAssets);
             currentScene.Load(sceneManager);
         }
 
-        private void FinishLoad()
+        private void FinishLoad(HashSet<string> assets = null, HashSet<string> loadAssets = null)
         {
-            HashSet<string> assets = GetOurAssets();
-            HashSet<string> loadAssets = new HashSet<string>(assets);
-            loadAssets.UnionWith(currentScene.GetPreloadAssetList());
-            assets.UnionWith(currentScene.GetAssetList());
+            if (assets == null)
+            {
+                assets = GetOurAssets();
+                loadAssets = new HashSet<string>(assets);
+                loadAssets.UnionWith(currentScene.GetPreloadAssetList());
+                assets.UnionWith(currentScene.GetAssetList());
+            }
 
             //cleanup all of the load stuff now
             renderer.Assets.EndLoad(assets, loadAssets);
@@ -678,26 +704,6 @@ namespace cylib
         }
 #endif
         #endregion
-
-        public void EnterFPVMode()
-        {
-            input.EnterFPVMode();
-        }
-
-        public void LeaveFPVMode()
-        {
-            input.LeaveFPVMode();
-        }
-
-        public void ConstrainMouseToWindow()
-        {
-            input.ConstrainMouseToWindow();
-        }
-
-        public void StopConstrainingMouseToWindow()
-        {
-            input.StopConstrainingMouseToWindow();
-        }
 
         public void updateSubresource<T>(Resource b, T value) where T : struct
         {

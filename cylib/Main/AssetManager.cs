@@ -320,6 +320,17 @@ namespace cylib
             assetsAddedDuringLoad.Clear();
         }
 
+        public bool LoadHasWorkToDo(HashSet<string> keepAssets, HashSet<string> preloadAssets)
+        {
+            var s_Keep = new HashSet<string>(keepAssets.Union(preloadAssets.Union(assetsAddedDuringLoad)));
+            var s_toLoad = new HashSet<string>(s_Keep.Except(loadedAssets.Keys));
+            var s_toDipose = new HashSet<string>(loadedAssets.Keys.Except(s_Keep));
+
+            if (s_toLoad.Count == 0 && s_toDipose.Count == 0)
+                return false;
+            return true;
+        }
+
         /// <summary>
         /// Called after load is finished, to dispose of assets needed during load but not elsewhere.
         /// Should be called from main thread.

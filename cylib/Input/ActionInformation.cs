@@ -35,7 +35,8 @@ namespace cylib
         public readonly int mouseX;
         public readonly int mouseY;
 
-        public readonly static ActionEventArgs None = new ActionEventArgs();
+        public readonly float relMouseX;
+        public readonly float relMouseY;
 
         public ActionEventArgs(string action, FiredBy cause, bool buttonDown, float axisVal, float triggerVal)
         {
@@ -47,15 +48,19 @@ namespace cylib
 
             mouseX = 0;
             mouseY = 0;
+            relMouseX = 0;
+            relMouseY = 0;
         }
 
-        public ActionEventArgs(string action, FiredBy cause, bool buttonDown, int mouseX, int mouseY)
+        public ActionEventArgs(string action, FiredBy cause, bool buttonDown, int mouseX, int mouseY, float relMouseX, float relMouseY)
         {
             this.action = action;
             this.cause = cause;
             this.mouseX = mouseX;
             this.mouseY = mouseY;
             this.buttonDown = buttonDown;
+            this.relMouseX = relMouseX;
+            this.relMouseY = relMouseY;
 
             axisVal = 0;
             triggerVal = 0;
@@ -63,7 +68,7 @@ namespace cylib
     }
     #endregion
 
-    public class ActionInformation
+    public struct ActionInformation
     {
         //the underlying 'action' support information -- does not have keybind information, just what type of keybinds it *could* support
         public string Name { get; }
@@ -83,28 +88,32 @@ namespace cylib
     }
 
     #region KeyMap
-    internal interface ActionMap
+    public interface ActionMap
     {
         bool IsFired { get; set; }
         string Name { get; }
+        string BindDisplay { get; }
     }
 
-    internal class KeyMap : ActionMap
+    public class KeyMap : ActionMap
     {
-        ActionInformation Action { get; }
+        internal ActionInformation Action { get; }
         internal bool CaresAboutModifiers { get { return Action.CaresAboutModifiers; } }
         public string Name { get { return Action.Name; } }
         internal bool RequiresShift { get; }
         internal bool RequiresCtrl { get; }
         internal bool RequiresAlt { get; }
         public bool IsFired { get; set; }
+        public readonly Scancode key;
 
-        public KeyMap(ActionInformation action, bool requiresShift, bool requiresCtrl, bool requiresAlt)
+        public KeyMap(Scancode key, ActionInformation action, bool requiresShift, bool requiresCtrl, bool requiresAlt)
         {
+            this.key = key;
             this.Action = action;
             this.RequiresShift = requiresShift;
             this.RequiresCtrl = requiresCtrl;
             this.RequiresAlt = requiresAlt;
+            IsFired = false;
         }
 
         public override bool Equals(object obj)
@@ -144,29 +153,34 @@ namespace cylib
             return !a.Equals(b);
         }
 
-        public string GetBindDisplay(Scancode s)
+        public string BindDisplay
         {
-            string toReturn = s.ToString();
-            if (!CaresAboutModifiers)
+            get
+            {
+                string toReturn = key.ToString();
+                if (!CaresAboutModifiers)
+                    return toReturn;
+                if (RequiresShift)
+                    toReturn += "+SHIFT";
+                if (RequiresCtrl)
+                    toReturn += "+CTRL";
+                if (RequiresAlt)
+                    toReturn += "+ALT";
                 return toReturn;
-            if (RequiresShift)
-                toReturn += "+SHIFT";
-            if (RequiresCtrl)
-                toReturn += "+CTRL";
-            if (RequiresAlt)
-                toReturn += "+ALT";
-            return toReturn;
+            }
         }
     }
 
-    internal class PointerMap : ActionMap
+    public class PointerMap : ActionMap
     {
-        ActionInformation Action { get; }
+        internal ActionInformation Action { get; }
         public string Name { get { return Action.Name; } }
         public bool IsFired { get; set; }
+        public readonly PointerButton button;
 
-        public PointerMap(ActionInformation action)
+        public PointerMap(PointerButton button, ActionInformation action)
         {
+            this.button = button;
             this.Action = action;
         }
 
@@ -198,20 +212,21 @@ namespace cylib
             return !a.Equals(b);
         }
 
-        public string GetBindDisplay(PointerButton p)
+        public string BindDisplay
         {
-            string toReturn = p.ToString();
-            return toReturn;
+            get
+            {
+                return button.ToString() + "_MOUSE";
+            }
         }
     }
     #endregion
 
-    class ActionMapper
+    public class ActionMapper
     {
-        readonly InputHandler Input;
-        readonly Dictionary<string, ActionInformation> NameToAction;
-        readonly Dictionary<Scancode, List<KeyMap>> KeyToAction;
-        readonly Dictionary<PointerButton, PointerMap> PointerToAction;
+        readonly Dictionary<string, ActionInformation> NameToAction; //Action Name -> Action Information (types of keys supported, etc)
+        readonly Dictionary<Scancode, List<KeyMap>> KeyToAction; //Keyboard key -> List of possible actions (depending on modifiers)
+        readonly Dictionary<PointerButton, PointerMap> PointerToAction; //Pointer button -> action
 
         /*
         Dictionary<ControllerButton, ActionType> controllerToAction;
@@ -219,19 +234,80 @@ namespace cylib
         Dictionary<Trigger, ActionType> triggerToAction;
         */
 
-        public ActionMapper(InputHandler input, string path)
+        public ActionMapper(IEnumerable<ActionInformation> SupportedActions, string BindingPath)
+            : this()
         {
-            this.Input = input;
+            foreach (var a in SupportedActions)
+            {
+                NameToAction.Add(a.Name, a);
+            }
+            LoadFromFile(BindingPath);
+        }
 
+        public ActionMapper()
+        {
             NameToAction = new Dictionary<string, ActionInformation>();
-
             KeyToAction = new Dictionary<Scancode, List<KeyMap>>();
             PointerToAction = new Dictionary<PointerButton, PointerMap>();
             //controllerToAction = new Dictionary<ControllerButton, ActionType>();
             //axisToAction = new Dictionary<Axis, ActionType>();
             //triggerToAction = new Dictionary<Trigger, ActionType>();
+        }
 
-            LoadFromFile(path);
+        /// <summary>
+        /// Used for keybinding interfaces -- create a copy, apply all changes to the copy, and then call UpdateFromCopy
+        /// </summary>
+        public ActionMapper CreateCopy()
+        {
+            //we do hard internal copying here
+            //skipping the add/remove methods in favor of just copying the internal data structure
+            //mostly to keep any hooks on 'bindingChanged' methods clean
+            var toRet = new ActionMapper();
+
+            foreach (var e in NameToAction)
+            {
+                toRet.NameToAction.Add(e.Key, e.Value);
+            }
+
+            foreach (var e in KeyToAction)
+            {
+                var l = new List<KeyMap>();
+                foreach (var i in e.Value)
+                {
+                    l.Add(i);
+                }
+
+                toRet.KeyToAction.Add(e.Key, l);
+            }
+
+            foreach (var e in PointerToAction)
+            {
+                toRet.PointerToAction.Add(e.Key, e.Value);
+            }
+
+            return toRet;
+        }
+        
+        public void UpdateFromCopy(ActionMapper copy)
+        {
+            //assuming NameToAction can't change
+            KeyToAction.Clear();
+            foreach (var e in copy.KeyToAction)
+            {
+                var l = new List<KeyMap>();
+                foreach (var i in e.Value)
+                {
+                    l.Add(i);
+                }
+
+                KeyToAction.Add(e.Key, l);
+            }
+
+            PointerToAction.Clear();
+            foreach (var e in copy.PointerToAction)
+            {
+                PointerToAction.Add(e.Key, e.Value);
+            }
         }
 
         #region Actions Get/Bind/Unbind
@@ -266,6 +342,10 @@ namespace cylib
 
         public bool TryGetAction(PointerButton button, out ActionMap args)
         {
+            //pointer actions are simpler because they don't care about modifiers
+            //theoretically may want to add modifier support? for MMO keybindspam games?
+            //input handling systems don't typically support modifiers with pointer/controller buttons because they're separate inputs
+            //sdl won't give me information about the keyboard during a mouse event, would have to track modifier states seperately
             if (!PointerToAction.TryGetValue(button, out var action))
             {
                 args = null;
@@ -282,22 +362,26 @@ namespace cylib
         /// 
         /// Ways this can fail:
         ///     1. Attempting to bind a key to an action that doesn't support keys.
+        ///     2. Attempting to bind an action that doesn't exist.
         /// </summary>
-        bool AddKeyAction(Scancode s, bool shift, bool ctrl, bool alt, ActionInformation action)
+        public bool AddKeyAction(Scancode s, bool shift, bool ctrl, bool alt, string actionName)
         {
+            if (!NameToAction.TryGetValue(actionName, out var action))
+                return false;
+
             if (!action.SupportsButton)
                 return false;
 
             bool caresAboutMods = action.CaresAboutModifiers;
             List<KeyMap> m;
-            KeyMap map = new KeyMap(action, shift, ctrl, alt);
+            KeyMap map = new KeyMap(s, action, shift, ctrl, alt);
 
             if (!KeyToAction.TryGetValue(s, out m))
             {
                 m = new List<KeyMap>();
                 m.Add(map);
                 KeyToAction.Add(s, m);
-                Input.onBindingChange(s, map, true);
+                onBindingChange(map, true);
                 return true;
             }
 
@@ -309,11 +393,11 @@ namespace cylib
             {//nothing else matters, just unbind all of the other keys here
                 while (m.Count != 0)
                 {
-                    UnbindKey(s, m[0]);
+                    UnbindKeyAction(m[0]);
                 }
 
                 m.Add(map);
-                Input.onBindingChange(s, map, true);
+                onBindingChange(map, true);
                 return true;
             }
 
@@ -321,9 +405,9 @@ namespace cylib
             {//the action already bound here doesn't care about modifiers, so we have to unbind it
                 //we're assuming we don't enter a state where there are more than one actions bound to this key, and one of them doesn't care about modifiers
                 //that would be an invalid state
-                UnbindKey(s, m[0]);
+                UnbindKeyAction(m[0]);
                 m.Add(map);
-                Input.onBindingChange(s, map, true);
+                onBindingChange(map, true);
                 return true;
             }
 
@@ -332,7 +416,7 @@ namespace cylib
             {
                 if ((shift == m[i].RequiresShift) && (ctrl == m[i].RequiresCtrl) && (alt == m[i].RequiresAlt))
                 {//we found an exact conflict, so remove this key
-                    UnbindKey(s, m[i]);
+                    UnbindKeyAction(m[i]);
 
                     //there can't be two conflicts, so we're done here.
                     break;
@@ -341,17 +425,17 @@ namespace cylib
 
             //either we didn't find any conflicts, or we did and removed it
             m.Add(map);
-            Input.onBindingChange(s, map, true);
+            onBindingChange(map, true);
             return true;
         }
 
-        private void UnbindKey(Scancode s, KeyMap m)
+        public void UnbindKeyAction(KeyMap m)
         {
             List<KeyMap> list;
 
-            if (!KeyToAction.TryGetValue(s, out list))
+            if (!KeyToAction.TryGetValue(m.key, out list))
             {
-                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the key binding: " + s);
+                Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the key binding: " + m.key);
                 return;
             }
 
@@ -360,28 +444,36 @@ namespace cylib
                 if (list[i] == m)
                 {
                     list.RemoveAt(i);
-                    Input.onBindingChange(s, m, false);
+                    onBindingChange(m, false);
                     return;
                 }
             }
 
-            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the exact key map: " + s);
+            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Unbind Key was called, but we can't find the exact key map: " + m.key);
         }
 
-        bool AddPointerAction(PointerButton button, ActionInformation action)
+        public bool AddPointerAction(PointerButton button, string actionName)
         {
+            if (!NameToAction.TryGetValue(actionName, out var action))
+                return false;
+
             if (!action.SupportsButton)
                 return false;
 
+            UnbindPointerAction(button);
+
+            var map = new PointerMap(button, action);
+            PointerToAction.Add(button, map);
+            onBindingChange(map, true);
+            return true;
+        }
+
+        public void UnbindPointerAction(PointerButton button)
+        {
             if (PointerToAction.Remove(button, out var map))
             {
-                Input.onBindingChange(button, map, false);
+                onBindingChange(map, false);
             }
-
-            map = new PointerMap(action);
-            PointerToAction.Add(button, map);
-            Input.onBindingChange(button, map, true);
-            return true;
         }
         #endregion
 
@@ -390,10 +482,7 @@ namespace cylib
         {
             using (StreamWriter wr = new StreamWriter(new FileStream(path, FileMode.Create), Encoding.Unicode))
             {
-                foreach (var a in NameToAction.Values)
-                {
-                    wr.WriteLine("A," + a.Name + "," + a.SupportsButton + "," + a.SupportsTrigger + "," + a.SupportsAxis + "," + a.CaresAboutModifiers);
-                }
+                wr.WriteLine("#K = Key Bound to Action, Key ID, Shift, Ctrl, Alt, Action Name");
                 foreach (var ent in KeyToAction)
                 {
                     foreach (var map in ent.Value)
@@ -401,6 +490,9 @@ namespace cylib
                         wr.WriteLine("K," + ent.Key.ToString() + "," + map.RequiresShift + "," + map.RequiresCtrl + "," + map.RequiresAlt + "," + map.Name);
                     }
                 }
+
+                wr.WriteLine();
+                wr.WriteLine("#P = Pointer Button Bound to Action, Pointer Button ID, Action Name");
                 foreach (var ent in PointerToAction)
                 {
                     wr.WriteLine("P," + ent.Key.ToString() + "," + ent.Value.Name);
@@ -432,44 +524,7 @@ namespace cylib
                         parts[i] = parts[i].Trim();
                     }
 
-                    if (parts[0] == "A")
-                    {
-                        if (parts.Length != 6)
-                        {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Key binding config has incorrect number of parts: " + line);
-                            continue;
-                        }
-
-                        string action = parts[1];
-                        bool button, trigger, axis, mods;
-
-                        if (!bool.TryParse(parts[2], out button))
-                        {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read button supported value in action declaration: " + parts[2]);
-                            continue;
-                        }
-
-                        if (!bool.TryParse(parts[3], out trigger))
-                        {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read trigger supported value in action declaration: " + parts[3]);
-                            continue;
-                        }
-
-                        if (!bool.TryParse(parts[4], out axis))
-                        {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read axis supported value in action declaration: " + parts[4]);
-                            continue;
-                        }
-
-                        if (!bool.TryParse(parts[5], out mods))
-                        {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't read mods supported value in action declaration: " + parts[5]);
-                            continue;
-                        }
-
-                        NameToAction.Add(action, new ActionInformation(action, button, axis, trigger, mods));
-                    }
-                    else if (parts[0] == "P")
+                    if (parts[0] == "P")
                     {//pointer mapping
                         if (parts.Length != 3)
                         {
@@ -486,13 +541,10 @@ namespace cylib
                             continue;
                         }
 
-                        if (!NameToAction.TryGetValue(actionString, out var action))
+                        if (!AddPointerAction(p, actionString))
                         {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find action declaration for key binding: " + actionString);
-                            continue;
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Failed to bind pointer button to action: " + line);
                         }
-
-                        AddPointerAction(p, action);
                     }
                     else if (parts[0] == "K")
                     {//key mapping
@@ -530,13 +582,10 @@ namespace cylib
                             continue;
                         }
 
-                        if (!NameToAction.TryGetValue(actionString, out var action))
+                        if (!AddKeyAction(s, shift, ctrl, alt, actionString))
                         {
-                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Can't find action declaration for key binding: " + actionString);
-                            continue;
+                            Logger.WriteLine(LogType.POSSIBLE_ERROR, "Failed to bind button to action: " + line);
                         }
-
-                        AddKeyAction(s, shift, ctrl, alt, action);
                     }
                     else
                     {
@@ -553,27 +602,43 @@ namespace cylib
         /// Get a list of all bindings mapped to an Action.
         /// Generally slow, try to cache any results from this.
         /// 
-        /// Controller input should have analogous methdods -- call all of them that the action supports.
+        /// Other inputs should have analogous methdods -- call all of them that the action supports.
         /// </summary>
-        public List<KeyMap> getActionBinds(string action)
+        public IEnumerable<ActionMap> GetActionBinds(string action)
         {
-            List<KeyMap> toReturn = new List<KeyMap>();
-
             //We're just looping through the entire key map, as we don't have a reverse acceleration structure.
             //This should be fast enough, given we only expect to call this ~once per run.
-            foreach (var ent in KeyToAction)
+            foreach (var ent in KeyToAction.Values)
             {
-                foreach (var map in ent.Value)
+                foreach (var map in ent)
                 {
                     if (map.Name == action)
                     {
-                        toReturn.Add(map);
+                        yield return map;
                     }
                 }
             }
 
-            return toReturn;
+            foreach (var ent in PointerToAction.Values)
+            {
+                if (ent.Name == action)
+                {
+                    yield return ent;
+                }
+            }
         }
         #endregion
+
+        private void onBindingChange(ActionMap pointerData, bool isBound)
+        {
+            if (isBound)
+            {
+                Logger.WriteLine(LogType.VERBOSE, "Pointer binding added. Bind: " + pointerData.BindDisplay + " Action: " + pointerData.Name);
+            }
+            else
+            {
+                Logger.WriteLine(LogType.VERBOSE, "Pointer binding removed. Bind: " + pointerData.BindDisplay + " Action: " + pointerData.Name);
+            }
+        }
     }
 }

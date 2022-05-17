@@ -143,21 +143,8 @@ namespace cylib
         }
         #endregion
 
-        private InputHandler input;
-
-        public EventManager(InputHandler input)
+        public EventManager()
         {
-            this.input = input;
-        }
-
-        public void StartTyping(OnTextInput callback)
-        {
-            input.StartTyping(callback);
-        }
-
-        public void StopTyping()
-        {
-            input.StopTyping();
         }
 
         public void Clear()
