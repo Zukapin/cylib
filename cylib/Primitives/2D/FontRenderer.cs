@@ -245,7 +245,7 @@ namespace cylib
             {
                 var t = font.glyphs.GetValueOrDefault(str[i], font.unsupportedGlyph);
 
-                if (i == 0)
+                if (i != 0)
                     width -= t.bearingX * scale;
 
                 width += t.advanceX * scale;

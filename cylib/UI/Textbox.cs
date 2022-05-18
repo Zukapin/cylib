@@ -181,15 +181,19 @@ namespace cylib
 
                     //find where the mouse is along the length of text
                     //if it's past the end, we set it to max
-                    for (int i = 1; i < text.Length; i++)
+                    float prevLen = 0;
+                    for (int i = 1; i <= text.Length; i++)
                     {
-                        float xpos = font.pos.X + font.offset.X + font.getRenderWidth(text.Substring(0, i));
+                        var len = font.getRenderWidth(text.Substring(0, i));
+                        float xpos = font.pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
 
                         if (mouseX < xpos)
                         {
                             s = i - 1;
                             break;
                         }
+
+                        prevLen = len;
                     }
 
                     selDist = s - selPosition;
@@ -226,15 +230,19 @@ namespace cylib
 
                         //find where the mouse is pointing
                         //if the mouse is pointing beyond all chars, just select the last pos
-                        for (int i = 1; i < text.Length; i++)
+                        float prevLen = 0;
+                        for (int i = 1; i <= text.Length; i++)
                         {
-                            float xpos = font.pos.X + font.offset.X + font.getRenderWidth(text.Substring(0, i));
+                            var len = font.getRenderWidth(text.Substring(0, i));
+                            float xpos = font.pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
 
                             if (mouseX < xpos)
                             {
                                 selPosition = i - 1;
                                 break;
                             }
+
+                            prevLen = len;
                         }
 
                         calcCursorPosition();
@@ -254,15 +262,18 @@ namespace cylib
                         em.changePriority((int)InterfacePriority.MEDIUM, onPointerEvent);
 
                         //figure out where the mouse is dragging the selection to
-                        for (int i = 1; i < text.Length; i++)
+                        float prevLen = 0;
+                        for (int i = 1; i <= text.Length; i++)
                         {
-                            float xpos = font.pos.X + font.offset.X + font.getRenderWidth(text.Substring(0, i));
+                            var len = font.getRenderWidth(text.Substring(0, i));
+                            float xpos = font.pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
 
                             if (mouseX < xpos)
                             {
                                 s = i - 1;
                                 break;
                             }
+                            prevLen = len;
                         }
 
                         selDist = s - selPosition;

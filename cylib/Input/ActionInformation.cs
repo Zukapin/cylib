@@ -629,15 +629,15 @@ namespace cylib
         }
         #endregion
 
-        private void onBindingChange(ActionMap pointerData, bool isBound)
+        private void onBindingChange(ActionMap bindData, bool isBound)
         {
             if (isBound)
             {
-                Logger.WriteLine(LogType.VERBOSE, "Pointer binding added. Bind: " + pointerData.BindDisplay + " Action: " + pointerData.Name);
+                Logger.WriteLine(LogType.VERBOSE, "Action binding added. Bind: " + bindData.BindDisplay + " Action: " + bindData.Name);
             }
             else
             {
-                Logger.WriteLine(LogType.VERBOSE, "Pointer binding removed. Bind: " + pointerData.BindDisplay + " Action: " + pointerData.Name);
+                Logger.WriteLine(LogType.VERBOSE, "Action binding removed. Bind: " + bindData.BindDisplay + " Action: " + bindData.Name);
             }
         }
     }
