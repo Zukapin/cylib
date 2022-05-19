@@ -75,9 +75,9 @@ namespace cylib
         public Font font;
         SamplerState sampler;
 
-        public Vector2 pos;
-        public string text;
-        public float scale;
+        public Vector2 Pos;
+        public string Text;
+        public float Scale;
         public Color color;
 
         /// <summary>
@@ -95,9 +95,9 @@ namespace cylib
         public Vector2 boundsPos;
         public Vector2 boundsScale;
 
-        public FontAnchor anchor = FontAnchor.BOTTOM_LEFT;
+        public FontAnchor Anchor = FontAnchor.BOTTOM_LEFT;
 
-        public bool enabled = true;
+        public bool Enabled = true;
 
         Renderer renderer;
         EventManager em;
@@ -119,9 +119,9 @@ namespace cylib
             colorBuf = renderer.Assets.GetBuffer<ColorBuffer>(Renderer.DefaultAssets.BUF_COLOR);
             sampler = renderer.samplerLinear;
 
-            pos = new Vector2();
-            text = "";
-            scale = 16f;
+            Pos = new Vector2();
+            Text = "";
+            Scale = 16f;
             color = Color.White;
             offset = new Vector2(0, 0);
             boundsPos = new Vector2(-1, -1);
@@ -135,7 +135,7 @@ namespace cylib
 
         void Draw2D()
         {
-            if (!enabled)
+            if (!Enabled)
                 return;
 
             if (boundsScale.X == 0 || boundsScale.Y == 0)
@@ -163,18 +163,18 @@ namespace cylib
             }
 
             int index = 0;
-            float penX = pos.X + calcAnchorX() + offset.X;
-            float penY = pos.Y + calcAnchorY() + offset.Y;
+            float penX = Pos.X + calcAnchorX() + offset.X;
+            float penY = Pos.Y + calcAnchorY() + offset.Y;
             float startPenX = penX;
 
-            while (index < text.Length)
+            while (index < Text.Length)
             {
                 int loops = glyphBuf.numElements / 6;
                 int i = 0;
 
-                for (; i < loops && i + index < text.Length; i++)
+                for (; i < loops && i + index < Text.Length; i++)
                 {
-                    var c = text[i + index];
+                    var c = Text[i + index];
                     if (c == '\r')
                     {
                         index++;
@@ -184,14 +184,14 @@ namespace cylib
                     if (c == '\n')
                     {//special case character controls here
                         penX = startPenX;
-                        penY += (font.ascenderHeight - font.descenderHeight) * scale;
+                        penY += (font.ascenderHeight - font.descenderHeight) * Scale;
                         index++;
                         i--;
                         continue;
                     }
                     var t = font.glyphs.GetValueOrDefault(c, font.unsupportedGlyph);
 
-                    float bear = t.bearingX * scale;
+                    float bear = t.bearingX * Scale;
                     if (penX != startPenX)
                         penX -= bear;
 
@@ -204,14 +204,14 @@ namespace cylib
                     float ty = t.aPosY - tdy;
                     float tyn = t.aPosY + t.aHeight + tdy;
 
-                    float dx = tdx / t.aWidth * t.gWidth * scale;
-                    float dy = tdy / t.aHeight * t.gHeight * scale;
+                    float dx = tdx / t.aWidth * t.gWidth * Scale;
+                    float dy = tdy / t.aHeight * t.gHeight * Scale;
 
                     float x = penX + bear - dx;
-                    float xn = x + t.gWidth * scale + dx * 2;
+                    float xn = x + t.gWidth * Scale + dx * 2;
 
-                    float y = penY - t.bearingY * scale - dy;
-                    float yn = y + t.gHeight * scale + dy * 2;
+                    float y = penY - t.bearingY * Scale - dy;
+                    float yn = y + t.gHeight * Scale + dy * 2;
 
                     glyphBuf.dat[i * 6 + 0] = new FontGlyphBuffer(new Vector3(x, y, 0), new Vector2(tx, ty));
                     glyphBuf.dat[i * 6 + 1] = new FontGlyphBuffer(new Vector3(xn, y, 0), new Vector2(txn, ty));
@@ -220,11 +220,11 @@ namespace cylib
                     glyphBuf.dat[i * 6 + 4] = new FontGlyphBuffer(new Vector3(xn, y, 0), new Vector2(txn, ty));
                     glyphBuf.dat[i * 6 + 5] = new FontGlyphBuffer(new Vector3(xn, yn, 0), new Vector2(txn, tyn));
 
-                    penX += t.advanceX * scale;
+                    penX += t.advanceX * Scale;
 
-                    if (i + index != text.Length - 1)
+                    if (i + index != Text.Length - 1)
                     {
-                        penX += t.kerningMap.GetValueOrDefault(text[i + index + 1], 0f) * scale;
+                        penX += t.kerningMap.GetValueOrDefault(Text[i + index + 1], 0f) * Scale;
                     }
                 }
 
@@ -246,13 +246,13 @@ namespace cylib
                 var t = font.glyphs.GetValueOrDefault(str[i], font.unsupportedGlyph);
 
                 if (i != 0)
-                    width -= t.bearingX * scale;
+                    width -= t.bearingX * Scale;
 
-                width += t.advanceX * scale;
+                width += t.advanceX * Scale;
 
                 if (i != str.Length - 1)
                 {
-                    width += t.kerningMap.GetValueOrDefault(str[i + 1], 0) * scale;
+                    width += t.kerningMap.GetValueOrDefault(str[i + 1], 0) * Scale;
                 }
             }
 
@@ -261,12 +261,12 @@ namespace cylib
 
         private float calcAnchorX()
         {
-            if (anchor == FontAnchor.TOP_LEFT || anchor == FontAnchor.CENTER_LEFT || anchor == FontAnchor.BASELINE_LEFT || anchor == FontAnchor.BOTTOM_LEFT)
+            if (Anchor == FontAnchor.TOP_LEFT || Anchor == FontAnchor.CENTER_LEFT || Anchor == FontAnchor.BASELINE_LEFT || Anchor == FontAnchor.BOTTOM_LEFT)
                 return 0;
 
-            float width = getRenderWidth(text);
+            float width = getRenderWidth(Text);
 
-            if (anchor == FontAnchor.TOP_CENTER || anchor == FontAnchor.CENTER_CENTER || anchor == FontAnchor.BASELINE_CENTER || anchor == FontAnchor.BOTTOM_CENTER)
+            if (Anchor == FontAnchor.TOP_CENTER || Anchor == FontAnchor.CENTER_CENTER || Anchor == FontAnchor.BASELINE_CENTER || Anchor == FontAnchor.BOTTOM_CENTER)
                 return -width / 2;
 
             //Anchor = RIGHT
@@ -278,25 +278,25 @@ namespace cylib
         /// </summary>
         public float getRenderHeight(string str)
         {
-            return (font.ascenderHeight - font.descenderHeight) * scale;
+            return (font.ascenderHeight - font.descenderHeight) * Scale;
         }
 
         private float calcAnchorY()
         {
-            if (anchor == FontAnchor.BASELINE_LEFT || anchor == FontAnchor.BASELINE_CENTER || anchor == FontAnchor.BASELINE_RIGHT)
+            if (Anchor == FontAnchor.BASELINE_LEFT || Anchor == FontAnchor.BASELINE_CENTER || Anchor == FontAnchor.BASELINE_RIGHT)
                 return 0;
 
             //doing a small fudge here because fonts are dumb
             float mul = 1 / (font.ascenderHeight - font.descenderHeight);
 
-            if (anchor == FontAnchor.BOTTOM_LEFT || anchor == FontAnchor.BOTTOM_CENTER || anchor == FontAnchor.BOTTOM_RIGHT)
-                return font.descenderHeight * scale * mul;
+            if (Anchor == FontAnchor.BOTTOM_LEFT || Anchor == FontAnchor.BOTTOM_CENTER || Anchor == FontAnchor.BOTTOM_RIGHT)
+                return font.descenderHeight * Scale * mul;
 
-            if (anchor == FontAnchor.TOP_LEFT || anchor == FontAnchor.TOP_CENTER || anchor == FontAnchor.TOP_RIGHT)
-                return font.ascenderHeight * scale * mul;
+            if (Anchor == FontAnchor.TOP_LEFT || Anchor == FontAnchor.TOP_CENTER || Anchor == FontAnchor.TOP_RIGHT)
+                return font.ascenderHeight * Scale * mul;
 
             //Anchor = CENTER
-            return (font.ascenderHeight + font.descenderHeight) * scale * mul / 2;
+            return (font.ascenderHeight + font.descenderHeight) * Scale * mul / 2;
         }
 
         public void Dispose()

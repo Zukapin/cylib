@@ -54,9 +54,9 @@ namespace cylib
 
         private void recalcPos()
         {
-            font.pos.X = pos.X + scale.X / 2f;
-            font.pos.Y = pos.Y + scale.Y / 2f;
-            font.scale = scale.Y - rect.borderThickness * 2 - 10;
+            font.Pos.X = pos.X + scale.X / 2f;
+            font.Pos.Y = pos.Y + scale.Y / 2f;
+            font.Scale = scale.Y - rect.borderThickness * 2 - 10;
 
             rect.position = pos;
             rect.scale = scale;
@@ -87,7 +87,7 @@ namespace cylib
                 }
 
                 _sel = value;
-                font.text = labels[_sel];
+                font.Text = labels[_sel];
 
                 if (onSelectionChange != null)
                     onSelectionChange(_sel);
@@ -114,7 +114,7 @@ namespace cylib
 
             font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
             font.color = fontColor;
-            font.anchor = FontAnchor.CENTER_CENTER;
+            font.Anchor = FontAnchor.CENTER_CENTER;
 
             leftButton = new BoxTextButton(renderer, em, priority + 1, "<", UIScaleX, UIScaleY);
             leftButton.drawBackground = false;
@@ -122,8 +122,8 @@ namespace cylib
             rightButton = new BoxTextButton(renderer, em, priority + 1, ">", UIScaleX, UIScaleY);
             rightButton.drawBackground = false;
 
-            leftButton.onClick += onLeftClick;
-            rightButton.onClick += onRightClick;
+            leftButton.OnClick += onLeftClick;
+            rightButton.OnClick += onRightClick;
 
             Selection = initial;
         }

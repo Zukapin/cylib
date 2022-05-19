@@ -19,7 +19,7 @@ namespace coretest
             var window = new Window("CoreTest", 1920, 1080, WindowFlags.NONE);
             var rend = new Renderer(window);
             rend.Assets.AddAssetBlob("coretest.blob");
-            var stage = new GameStage(rend, "binds.cyb");
+            var stage = new GameStage(rend, ActionTypes.AllActions, "binds.cyb");
             var scene = new TestScene(stage);
 
             stage.switchToScene(scene);

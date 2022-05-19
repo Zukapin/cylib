@@ -101,7 +101,7 @@ namespace cylib
         }
 
         private bool _isEnabled = true;
-        public virtual bool enabled
+        public virtual bool Enabled
         {
             set
             {
@@ -115,7 +115,7 @@ namespace cylib
         /// Fires when the button is pressed down on. Use onClick for a confirmed click.
         /// </summary>
         public event ButterInteractionEvent onPressed;
-        public event ButtonClickEvent onClick;
+        public event ButtonClickEvent OnClick;
 
         public Button(Renderer renderer, EventManager em, float UIScaleX = -1, float UIScaleY = -1)
         {
@@ -165,8 +165,8 @@ namespace cylib
                         if (mouseX > pos.X && mouseX <= pos.X + scale.X
                             && mouseY > pos.Y && mouseY <= pos.Y + scale.Y)
                         {
-                            if (onClick != null)
-                                onClick(this);
+                            if (OnClick != null)
+                                OnClick(this);
                         }
 
                         return true;

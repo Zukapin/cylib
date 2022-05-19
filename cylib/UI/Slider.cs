@@ -72,9 +72,9 @@ namespace cylib
             bar.position.X = pos.X;
             bar.position.Y = pos.Y + (scale.Y - bar.scale.Y) / 2f;
 
-            font.pos.X = pos.X + scale.X + point.scale.X / 2;
-            font.pos.Y = pos.Y + scale.Y / 2;
-            font.scale = scale.Y * 0.8f;
+            font.Pos.X = pos.X + scale.X + point.scale.X / 2;
+            font.Pos.Y = pos.Y + scale.Y / 2;
+            font.Scale = scale.Y * 0.8f;
         }
 
         bool _isDragging = false;
@@ -115,7 +115,7 @@ namespace cylib
                 point.position.X = pos.X + scale.X * _sliderPos - point.scale.X / 2;
 
                 float val = _sliderPos * (maxValue - minValue) + minValue;
-                font.text = val.ToString("G3");
+                font.Text = val.ToString("G3");
 
                 if (onValueChanged != null)
                     onValueChanged(val);
@@ -147,7 +147,7 @@ namespace cylib
 
             font = new FontRenderer(renderer, em, priority, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
             font.color = fontColor;
-            font.anchor = FontAnchor.CENTER_LEFT;
+            font.Anchor = FontAnchor.CENTER_LEFT;
 
             em.addEventHandler((int)InterfacePriority.MEDIUM, onPointerEvent);
 

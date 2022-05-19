@@ -21,10 +21,10 @@ namespace cylib
 
         protected override void recalcPositions()
         {
-            font.pos = Position + Scale / 2;
-            font.scale = Scale.Y - rect.borderThickness * 2 - 10;
+            font.Pos = Position + Scale / 2;
+            font.Scale = Scale.Y - rect.borderThickness * 2 - 10;
 
-            font.scale = Math.Min(font.scale, font.scale * (Scale.X - rect.borderThickness * 2 - 10) / font.getRenderWidth(font.text));
+            font.Scale = Math.Min(font.Scale, font.Scale * (Scale.X - rect.borderThickness * 2 - 10) / font.getRenderWidth(font.Text));
 
             rect.position = Position;
             rect.scale = Scale;
@@ -105,13 +105,13 @@ namespace cylib
             }
         }
 
-        public override bool enabled
+        public override bool Enabled
         {
             set
             {
-                base.enabled = value;
+                base.Enabled = value;
                 rect.enabled = _drawBackground && value;
-                font.enabled = value;
+                font.Enabled = value;
             }
         }
 
@@ -124,8 +124,8 @@ namespace cylib
 
             font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
             font.color = fontColor;
-            font.anchor = FontAnchor.CENTER_CENTER;
-            font.text = text;
+            font.Anchor = FontAnchor.CENTER_CENTER;
+            font.Text = text;
 
             onMouseOver += mouseOver;
             onPressed += pressed;

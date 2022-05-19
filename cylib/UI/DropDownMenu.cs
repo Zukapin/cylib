@@ -85,7 +85,7 @@ namespace cylib
                 }
 
                 _sel = value;
-                font.text = labelFonts[_sel].text;
+                font.Text = labelFonts[_sel].Text;
                 recalcPositions();
 
                 if (onSelectionChange != null)
@@ -116,9 +116,9 @@ namespace cylib
             rect.position = pos;
             rect.scale = scale;
 
-            font.pos.X = pos.X + fontBufferX;
-            font.pos.Y = pos.Y + scale.Y / 2;
-            font.scale = scale.Y - fontShrink;
+            font.Pos.X = pos.X + fontBufferX;
+            font.Pos.Y = pos.Y + scale.Y / 2;
+            font.Scale = scale.Y - fontShrink;
 
             dropBg.scale.X = scale.X;
             dropBg.scale.Y = Math.Min(getMaxDropHeight(), getTotalDropHeight());
@@ -133,9 +133,9 @@ namespace cylib
 
             for (int i = 0; i < labelFonts.Length; i++)
             {
-                labelFonts[i].pos.X = pos.X + fontBufferX;
-                labelFonts[i].pos.Y = dropBg.position.Y + i * scale.Y + scale.Y / 2 + scrollAmount;
-                labelFonts[i].scale = scale.Y - fontShrink - menuBufferY;
+                labelFonts[i].Pos.X = pos.X + fontBufferX;
+                labelFonts[i].Pos.Y = dropBg.position.Y + i * scale.Y + scale.Y / 2 + scrollAmount;
+                labelFonts[i].Scale = scale.Y - fontShrink - menuBufferY;
 
                 float bPosY = dropBg.position.Y + i * scale.Y + scrollAmount;
                 labelFonts[i].boundsPos.X = pos.X;
@@ -197,7 +197,7 @@ namespace cylib
 
                 for (int i = 0; i < labelFonts.Length; i++)
                 {
-                    labelFonts[i].enabled = value;
+                    labelFonts[i].Enabled = value;
                 }
 
                 if (value)
@@ -263,16 +263,16 @@ namespace cylib
             mouseHl.enabled = false;
 
             font = new FontRenderer(renderer, em, priority + 1, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT));
-            font.anchor = FontAnchor.CENTER_LEFT;
-            font.text = labels[Selection];
+            font.Anchor = FontAnchor.CENTER_LEFT;
+            font.Text = labels[Selection];
 
             labelFonts = new FontRenderer[labels.Length];
             for (int i = 0; i < labelFonts.Length; i++)
             {
                 labelFonts[i] = new FontRenderer(renderer, em, dropP + 3, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT), UIScaleX, UIScaleY);
-                labelFonts[i].anchor = FontAnchor.CENTER_LEFT;
-                labelFonts[i].text = labels[i];
-                labelFonts[i].enabled = false;
+                labelFonts[i].Anchor = FontAnchor.CENTER_LEFT;
+                labelFonts[i].Text = labels[i];
+                labelFonts[i].Enabled = false;
             }
 
             scrollbar = new ScrollBar(renderer, em, dropP + 1, UIScaleX, UIScaleY);

@@ -53,6 +53,21 @@ namespace coretest
         public const string ENTER_FPV = "ENTER_FPV";
         public const string LEAVE_FPV = "LEAVE_FPV";
         public const string FIRE = "FIRE";
+
+        public static IEnumerable<ActionInformation> AllActions
+        {
+            get
+            {
+                yield return new ActionInformation(ESCAPE, true, false, false, false);
+                yield return new ActionInformation(FORWARD, true, false, false, false);
+                yield return new ActionInformation(BACKWARD, true, false, false, false);
+                yield return new ActionInformation(LEFT, true, false, false, false);
+                yield return new ActionInformation(RIGHT, true, false, false, false);
+                yield return new ActionInformation(ENTER_FPV, true, false, false, false);
+                yield return new ActionInformation(LEAVE_FPV, true, false, false, false);
+                yield return new ActionInformation(FIRE, true, false, false, false);
+            }
+        }
     }
 
     class TestPlayer
@@ -127,14 +142,14 @@ namespace coretest
         bool OnEnterFPV(ActionEventArgs args)
         {
             if (args.buttonDown)
-                stage.EnterFPVMode();
+                stage.Input.EnterFPVMode();
             return true;
         }
 
         bool OnLeaveFPV(ActionEventArgs args)
         {
             if (args.buttonDown)
-                stage.LeaveFPVMode();
+                stage.Input.LeaveFPVMode();
             return true;
         }
 
@@ -367,24 +382,24 @@ namespace coretest
             testQuad.scale = new Vector2(10, 8);
 
             //ui crap
-            textbox = new Textbox(renderer, em, 0);
+            textbox = new Textbox(renderer, em, stage.Input, 0);
             textbox.Position = new Vector2(10, 400);
             textbox.Scale = new Vector2(500, 40);
 
-            textbox.onEnterPressed += onTestEnter;
+            textbox.OnEnterPressed += onTestEnter;
 
             var b = new BoxTextButton(renderer, em, 0, "Apply");
             b.Position = new Vector2(520, 400);
             b.Scale = new Vector2(120, 40);
 
-            b.onClick += onTestApply;
+            b.OnClick += onTestApply;
 
             b = new BoxTextButton(renderer, em, 0, "Color Cycle");
             b.Position = new Vector2(520, 460);
             b.Scale = new Vector2(200, 40);
             onTestClick(null);
 
-            b.onClick += onTestClick;
+            b.OnClick += onTestClick;
 
             string[] fontNames = new string[]
             {
@@ -444,7 +459,7 @@ namespace coretest
             float toReturn = 0;
             for (int x = 0; x < fonts.Length; x++)
             {
-                toReturn += fonts[x].scale + 10;
+                toReturn += fonts[x].Scale + 10;
             }
 
             return toReturn;
@@ -477,8 +492,8 @@ namespace coretest
                 }
 
                 pos.Y += scale + 10;
-                fonts[x].pos = pos;
-                fonts[x].scale = scale;
+                fonts[x].Pos = pos;
+                fonts[x].Scale = scale;
 
                 scale /= 2;
             }
@@ -556,7 +571,7 @@ namespace coretest
         {
             for (int x = 0; x < fonts.Length; x++)
             {
-                fonts[x].text = textbox.text;
+                fonts[x].Text = textbox.Text;
             }
         }
 
@@ -593,10 +608,10 @@ namespace coretest
                 pos.Y += scale + 10;
 
                 fonts[x] = new FontRenderer(renderer, em, 0, curFont);
-                fonts[x].text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris libero, placerat ut vehicula vel, vulputate eu nisi. Sed vestibulum ut velit vel pellentesque.";
-                fonts[x].anchor = FontAnchor.BOTTOM_LEFT;
-                fonts[x].pos = pos;
-                fonts[x].scale = scale;
+                fonts[x].Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mauris libero, placerat ut vehicula vel, vulputate eu nisi. Sed vestibulum ut velit vel pellentesque.";
+                fonts[x].Anchor = FontAnchor.BOTTOM_LEFT;
+                fonts[x].Pos = pos;
+                fonts[x].Scale = scale;
 
                 scale /= 2;
             }

@@ -47,8 +47,8 @@ namespace cylib
                 pos = value;
                 bg.position = pos;
 
-                font.pos.X = pos.X + buffer;
-                font.pos.Y = pos.Y + scale.Y / 2;
+                font.Pos.X = pos.X + buffer;
+                font.Pos.Y = pos.Y + scale.Y / 2;
 
                 font.boundsPos = new Vector2(pos.X + buffer, pos.Y);
 
@@ -68,8 +68,8 @@ namespace cylib
                 bg.scale = value;
                 scale = value;
 
-                font.pos.Y = pos.Y + scale.Y / 2;
-                font.scale = value.Y - buffer;
+                font.Pos.Y = pos.Y + scale.Y / 2;
+                font.Scale = value.Y - buffer;
                 font.boundsScale = value;
                 font.boundsScale.X -= buffer * 2;
 
@@ -107,22 +107,42 @@ namespace cylib
             }
         }
 
-        public string text
+        public string Text
         {
             get
             {
-                return font.text;
+                return font.Text;
             }
             set
             {
-                if (font.text == value)
+                if (font.Text == value)
                     return;
 
-                font.text = value;
+                font.Text = value;
                 calcCursorPosition();
 
-                if (onTextChanged != null)
-                    onTextChanged();
+                if (OnTextChanged != null)
+                    OnTextChanged();
+            }
+        }
+
+        private bool _isEnabled = true;
+        public bool Enabled
+        {
+            get
+            {
+                return _isEnabled;
+            }
+            set
+            {
+                _isEnabled = value;
+                if (!value)
+                {
+                    isTyping = false;
+                }
+
+                font.Enabled = value;
+                bg.enabled = value;
             }
         }
 
@@ -133,8 +153,8 @@ namespace cylib
         float selTimer = 0;
         bool mouseSelectingStuff = false;
 
-        public event TextboxEnter onEnterPressed;
-        public event TextboxEnter onTextChanged;
+        public event TextboxEnter OnEnterPressed;
+        public event TextboxEnter OnTextChanged;
 
         float UIScaleX;
         float UIScaleY;
@@ -152,7 +172,7 @@ namespace cylib
             bg.borderThickness = 1f;
 
             font = new FontRenderer(renderer, em, priority + 2, renderer.Assets.GetFont(Renderer.DefaultAssets.FONT_DEFAULT), UIScaleX, UIScaleY);
-            font.anchor = FontAnchor.CENTER_LEFT;
+            font.Anchor = FontAnchor.CENTER_LEFT;
             font.color = fontColor;
 
             selCursor = new RoundedRectangle_2D(renderer, em, priority + 1);
@@ -170,6 +190,9 @@ namespace cylib
 
         bool onPointerEvent(PointerEventArgs args)
         {
+            if (!Enabled)
+                return false;
+
             float mouseX = args.aimDeltaX * UIScaleX;
             float mouseY = args.aimDeltaY * UIScaleY;
 
@@ -177,15 +200,15 @@ namespace cylib
             {
                 if (mouseSelectingStuff)
                 {
-                    int s = text.Length;
+                    int s = Text.Length;
 
                     //find where the mouse is along the length of text
                     //if it's past the end, we set it to max
                     float prevLen = 0;
-                    for (int i = 1; i <= text.Length; i++)
+                    for (int i = 1; i <= Text.Length; i++)
                     {
-                        var len = font.getRenderWidth(text.Substring(0, i));
-                        float xpos = font.pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
+                        var len = font.getRenderWidth(Text.Substring(0, i));
+                        float xpos = font.Pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
 
                         if (mouseX < xpos)
                         {
@@ -226,15 +249,15 @@ namespace cylib
                         em.changePriority((int)InterfacePriority.HIGHEST, onPointerEvent);
 
                         selDist = 0;
-                        selPosition = text.Length;
+                        selPosition = Text.Length;
 
                         //find where the mouse is pointing
                         //if the mouse is pointing beyond all chars, just select the last pos
                         float prevLen = 0;
-                        for (int i = 1; i <= text.Length; i++)
+                        for (int i = 1; i <= Text.Length; i++)
                         {
-                            var len = font.getRenderWidth(text.Substring(0, i));
-                            float xpos = font.pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
+                            var len = font.getRenderWidth(Text.Substring(0, i));
+                            float xpos = font.Pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
 
                             if (mouseX < xpos)
                             {
@@ -257,16 +280,16 @@ namespace cylib
                     }
                     else if (!args.isDown && isTyping)
                     {
-                        int s = text.Length;
+                        int s = Text.Length;
                         mouseSelectingStuff = false;
                         em.changePriority((int)InterfacePriority.MEDIUM, onPointerEvent);
 
                         //figure out where the mouse is dragging the selection to
                         float prevLen = 0;
-                        for (int i = 1; i <= text.Length; i++)
+                        for (int i = 1; i <= Text.Length; i++)
                         {
-                            var len = font.getRenderWidth(text.Substring(0, i));
-                            float xpos = font.pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
+                            var len = font.getRenderWidth(Text.Substring(0, i));
+                            float xpos = font.Pos.X + font.offset.X + len - (len - prevLen) * 0.5f;
 
                             if (mouseX < xpos)
                             {
@@ -291,6 +314,9 @@ namespace cylib
 
         bool onKeyChange(KeyData key, bool isDown)
         {
+            if (!Enabled)
+                return false;
+
             if (isDown && isTyping)
             {
                 //we translate the given scankode to the keycode
@@ -305,18 +331,18 @@ namespace cylib
 
                 if (k == Keys.SDLK_DELETE || (k == Keys.SDLK_KP_DECIMAL && key.shift))
                 {
-                    if (selPosition == text.Length && selDist == 0)
+                    if (selPosition == Text.Length && selDist == 0)
                         return true;
 
-                    int len = text.Length;
+                    int len = Text.Length;
                     if (len == 0)
                         return true;
 
                     if (selDist == 0)
-                        text = text.Remove(selPosition, 1);
+                        Text = Text.Remove(selPosition, 1);
                     else
                     {
-                        text = text.Remove(Math.Min(selPosition, selPosition + selDist), Math.Abs(selDist));
+                        Text = Text.Remove(Math.Min(selPosition, selPosition + selDist), Math.Abs(selDist));
                         selPosition = Math.Min(selPosition, selPosition + selDist);
                         selDist = 0;
                     }
@@ -336,7 +362,7 @@ namespace cylib
 
                             for (int i = s - 2; i > 0; i--)
                             {
-                                if (text[i] == ' ')
+                                if (Text[i] == ' ')
                                 {
                                     selDist = i + 1;
                                     break;
@@ -359,7 +385,7 @@ namespace cylib
 
                         for (int i = s - 2; i > 0; i--)
                         {
-                            if (text[i] == ' ')
+                            if (Text[i] == ' ')
                             {
                                 selPosition = i + 1;
                                 break;
@@ -388,11 +414,11 @@ namespace cylib
                         if (key.ctrl)
                         {//select past the next space to the right
                             int s = selPosition + selDist;
-                            selDist = text.Length;
+                            selDist = Text.Length;
 
-                            for (int i = s; i < text.Length; i++)
+                            for (int i = s; i < Text.Length; i++)
                             {
-                                if (text[i] == ' ')
+                                if (Text[i] == ' ')
                                 {
                                     selDist = i + 1;
                                     break;
@@ -403,7 +429,7 @@ namespace cylib
                             calcCursorPosition();
                             return true;
                         }
-                        selDist = Math.Min(selDist + selPosition + 1, text.Length) - selPosition;
+                        selDist = Math.Min(selDist + selPosition + 1, Text.Length) - selPosition;
                         calcCursorPosition();
                         return true;
                     }
@@ -411,11 +437,11 @@ namespace cylib
                     if (key.ctrl)
                     {//go past the next space to the right
                         int s = selPosition + selDist;
-                        selPosition = text.Length;
+                        selPosition = Text.Length;
 
-                        for (int i = s; i < text.Length; i++)
+                        for (int i = s; i < Text.Length; i++)
                         {
-                            if (text[i] == ' ')
+                            if (Text[i] == ' ')
                             {
                                 selPosition = i + 1;
                                 break;
@@ -429,7 +455,7 @@ namespace cylib
 
                     //increment cursor by one
                     if (selDist == 0)
-                        selPosition = Math.Min(selPosition + 1, text.Length);
+                        selPosition = Math.Min(selPosition + 1, Text.Length);
                     else
                         selPosition = Math.Max(selPosition, selPosition + selDist);
 
@@ -457,12 +483,12 @@ namespace cylib
                 {//jump to the end
                     if (key.shift)
                     {//select to the end
-                        selDist = text.Length - selPosition;
+                        selDist = Text.Length - selPosition;
                         calcCursorPosition();
                         return true;
                     }
 
-                    selPosition = text.Length;
+                    selPosition = Text.Length;
                     selDist = 0;
                     calcCursorPosition();
                     return true;
@@ -471,7 +497,7 @@ namespace cylib
                 if (key.ctrl && k == Keys.SDLK_a)
                 {//select all
                     selPosition = 0;
-                    selDist = text.Length;
+                    selDist = Text.Length;
                     calcCursorPosition();
                     return true;
                 }
@@ -484,7 +510,7 @@ namespace cylib
                     int min = Math.Min(selPosition + selDist, selPosition);
                     int max = Math.Max(selPosition + selDist, selPosition);
 
-                    SDL2.SDL.SDL_SetClipboardText(text.Substring(min, max - min));
+                    SDL2.SDL.SDL_SetClipboardText(Text.Substring(min, max - min));
                     DoBackspace();
                     return true;
                 }
@@ -497,7 +523,7 @@ namespace cylib
                     int min = Math.Min(selPosition + selDist, selPosition);
                     int max = Math.Max(selPosition + selDist, selPosition);
 
-                    SDL2.SDL.SDL_SetClipboardText(text.Substring(min, max - min));
+                    SDL2.SDL.SDL_SetClipboardText(Text.Substring(min, max - min));
                     return true;
                 }
 
@@ -515,8 +541,8 @@ namespace cylib
                 {//enter, fire event
                     selDist = 0;
 
-                    if (onEnterPressed != null)
-                        onEnterPressed();
+                    if (OnEnterPressed != null)
+                        OnEnterPressed();
 
                     isTyping = false;
                     return true;
@@ -529,6 +555,8 @@ namespace cylib
 
         void OnText(string toAdd)
         {
+            if (!Enabled)
+                return;
             //so this text can be dirty -- unicode characters we don't support or whatever. trusting in C#'s string implementation to... deal with it
             if (selDist != 0)
             {
@@ -538,10 +566,10 @@ namespace cylib
                 var oldSelDist = selDist;
                 selPosition = Math.Min(selPosition, selPosition + selDist);
                 selDist = 0;
-                text = text.Remove(Math.Min(oldSelPos, oldSelPos + oldSelDist), Math.Abs(oldSelDist));
+                Text = Text.Remove(Math.Min(oldSelPos, oldSelPos + oldSelDist), Math.Abs(oldSelDist));
             }
 
-            text = text.Insert(selPosition, toAdd);
+            Text = Text.Insert(selPosition, toAdd);
             selPosition++;
 
             calcCursorPosition();
@@ -552,15 +580,15 @@ namespace cylib
             if (selPosition == 0 && selDist == 0)
                 return;
 
-            int len = text.Length;
+            int len = Text.Length;
             if (len == 0)
                 return;
 
             if (selDist == 0)
-                text = text.Remove(--selPosition, 1);
+                Text = Text.Remove(--selPosition, 1);
             else
             {
-                text = text.Remove(Math.Min(selPosition, selPosition + selDist), Math.Abs(selDist));
+                Text = Text.Remove(Math.Min(selPosition, selPosition + selDist), Math.Abs(selDist));
                 selPosition = Math.Min(selPosition, selPosition + selDist);
                 selDist = 0;
             }
@@ -583,35 +611,35 @@ namespace cylib
             selTimer = 0;
             selCursor.enabled = isTyping;
 
-            selPosition = Math.Max(Math.Min(selPosition, text.Length), 0);
-            selDist = Math.Max(Math.Min(selPosition + selDist, text.Length), 0) - selPosition;
+            selPosition = Math.Max(Math.Min(selPosition, Text.Length), 0);
+            selDist = Math.Max(Math.Min(selPosition + selDist, Text.Length), 0) - selPosition;
 
-            float strWidth = font.getRenderWidth(text);
-            if (font.pos.X + font.offset.X + strWidth < pos.X + scale.X - buffer && font.offset.X < 0)
+            float strWidth = font.getRenderWidth(Text);
+            if (font.Pos.X + font.offset.X + strWidth < pos.X + scale.X - buffer && font.offset.X < 0)
             {//if we have room to move the text back to the right into view, do it
                 //careful with this, easy to get in an infinite loop with the other text scrollers at the end
-                font.offset.X -= font.pos.X + font.offset.X + strWidth - (pos.X + scale.X);
+                font.offset.X -= font.Pos.X + font.offset.X + strWidth - (pos.X + scale.X);
                 font.offset.X = Math.Min(font.offset.X, 0);
             }
 
-            selCursor.position.X = font.pos.X + font.offset.X;
-            selCursor.position.Y = pos.Y + (scale.Y - font.scale) / 2;
+            selCursor.position.X = font.Pos.X + font.offset.X;
+            selCursor.position.Y = pos.Y + (scale.Y - font.Scale) / 2;
 
             //the 'active' position, either the cursor position or the active selection position
             float activePos;
             if (selDist == 0)
             {//drawing the cursor,
-                selCursor.scale = new Vector2(2, font.scale);
+                selCursor.scale = new Vector2(2, font.Scale);
 
-                selCursor.position.X += font.getRenderWidth(text.Substring(0, selPosition)) - 1;
+                selCursor.position.X += font.getRenderWidth(Text.Substring(0, selPosition)) - 1;
                 selCursor.mainColor = cursorColor;
 
                 activePos = selCursor.position.X;
             }
             else
             {
-                float distPos = font.getRenderWidth(text.Substring(0, selPosition + selDist));
-                float curPos = font.getRenderWidth(text.Substring(0, selPosition));
+                float distPos = font.getRenderWidth(Text.Substring(0, selPosition + selDist));
+                float curPos = font.getRenderWidth(Text.Substring(0, selPosition));
 
                 activePos = selCursor.position.X + distPos;
 
@@ -619,7 +647,7 @@ namespace cylib
                 float maxDist = Math.Max(distPos, curPos) + selCursor.position.X;
 
                 selCursor.position.X = minDist - 1;
-                selCursor.scale.Y = font.scale;
+                selCursor.scale.Y = font.Scale;
                 selCursor.scale.X = maxDist - 2;
                 selCursor.enabled = true;
                 selCursor.mainColor = selColor;
