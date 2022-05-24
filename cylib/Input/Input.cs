@@ -320,7 +320,7 @@ namespace cylib
                             case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
                                 break;
                             default:
-                                Logger.WriteLine(LogType.VERBOSE, "Missing handling for window event: " + ev.window.windowEvent);
+                                Logger.WriteLine(LogType.VERBOSE2, "Missing handling for window event: " + ev.window.windowEvent);
                                 break;
                         }
                         break;

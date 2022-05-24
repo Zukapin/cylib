@@ -12,7 +12,7 @@ using SharpDX.DXGI;
 namespace cylib
 {
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    struct RectangleData
+    public struct RectangleData
     {
         [FieldOffset(0)]
         public Vector2 pos;
@@ -20,29 +20,36 @@ namespace cylib
         public Vector2 widthHeight;
         [FieldOffset(16)]
         public Vector4 color;
+
+        public RectangleData(Vector2 pos, float width, float height, Color color)
+        {
+            this.pos = pos;
+            this.widthHeight = new Vector2(width, height);
+            this.color = Texture.convertToLinear(color);
+        }
     }
 
     public class Rectangles_2D : IDisposable
     {
         public Shader shader;
-        private ConstBuffer<RectangleData> circleBuf;
+        private ConstBuffer<RectangleData> rectBuf;
         private ConstBuffer<ushort> indexBuffer;
 
-        public List<(Vector2 position, float width, float height, Color color)> Rectangles;
+        IEnumerable<RectangleData> Rectangles;
 
         Renderer renderer;
         EventManager em;
 
-        public Rectangles_2D(Renderer renderer, EventManager em, int priority)
+        public Rectangles_2D(Renderer renderer, EventManager em, int priority, IEnumerable<RectangleData> Rectangles)
         {
             this.renderer = renderer;
             this.em = em;
 
             shader = renderer.Assets.GetShader(Renderer.DefaultAssets.SH_RECTANGLE_2D);
-            circleBuf = renderer.Assets.GetBuffer<RectangleData>(Renderer.DefaultAssets.BUF_RECTANGLE);
+            rectBuf = renderer.Assets.GetBuffer<RectangleData>(Renderer.DefaultAssets.BUF_RECTANGLE);
             indexBuffer = renderer.Assets.GetBuffer<ushort>(Renderer.DefaultAssets.BUF_QUAD_INDEX);
 
-            Rectangles = new List<(Vector2 position, float width, float height, Color color)>();
+            this.Rectangles = Rectangles;
 
             em.addDraw2D(priority, Draw2D);
         }
@@ -50,28 +57,27 @@ namespace cylib
         void Draw2D()
         {
             shader.Bind(renderer.Context);
-            renderer.Context.VertexShader.SetShaderResource(0, circleBuf.srv);
+            renderer.Context.VertexShader.SetShaderResource(0, rectBuf.srv);
             renderer.Context.InputAssembler.SetIndexBuffer(indexBuffer.buf, Format.R16_UInt, 0);
 
             int index = 0;
 
-            while (index < Rectangles.Count)
+            foreach (var c in Rectangles)
             {
-                int loops = Math.Min(index + circleBuf.numElements, Rectangles.Count) - index;
+                rectBuf.dat[index++] = c;
 
-                for (int i = 0; i < loops; i++)
+                if (index == rectBuf.numElements)
                 {
-                    var r = Rectangles[i + index];
-                    circleBuf.dat[i].pos = r.position;
-                    circleBuf.dat[i].widthHeight = new Vector2(r.width, r.height);
-                    circleBuf.dat[i].color = Texture.convertToLinear(r.color);
+                    rectBuf.Write(renderer.Context, 0, index);
+                    renderer.Context.DrawIndexed(index * 6, 0, 0);
+                    index = 0;
                 }
+            }
 
-                circleBuf.Write(renderer.Context, 0, loops);
-
-                renderer.Context.DrawIndexed(loops * 6, 0, 0);
-
-                index += loops;
+            if (index != 0)
+            {
+                rectBuf.Write(renderer.Context, 0, index);
+                renderer.Context.DrawIndexed(index * 6, 0, 0);
             }
         }
 
